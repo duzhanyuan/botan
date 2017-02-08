@@ -495,7 +495,9 @@ PKIX::build_certificate_path(std::vector<std::shared_ptr<const X509_Certificate>
       const std::string fprint = issuer->fingerprint("SHA-256");
 
       if(certs_seen.count(fprint) > 0) // already seen?
+         {
          return Certificate_Status_Code::CERT_CHAIN_LOOP;
+         }
 
       certs_seen.insert(fprint);
       cert_path.push_back(issuer);
