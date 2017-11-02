@@ -547,8 +547,8 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
                           const Private_Key* signing_key = nullptr);
 
       Server_Key_Exchange(const std::vector<uint8_t>& buf,
-                          const std::string& kex_alg,
-                          const std::string& sig_alg,
+                          Kex_Algo kex_alg,
+                          Sig_Algo sig_alg,
                           Protocol_Version version);
 
       ~Server_Key_Exchange() = default;

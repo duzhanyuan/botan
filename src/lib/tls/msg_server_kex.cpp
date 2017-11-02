@@ -44,9 +44,9 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
                                          const Private_Key* signing_key)
    {
    const std::string hostname = state.client_hello()->sni_hostname();
-   const std::string kex_algo = state.ciphersuite().kex_algo();
+   const Kex_Algo kex_algo = state.ciphersuite().kex_method();
 
-   if(kex_algo == "PSK" || kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
+   if(kex_algo == Kex_Algo::PSK || kex_algo == Kex_Algo::DHE_PSK || kex_algo == Kex_Algo::ECDHE_PSK)
       {
       std::string identity_hint =
          creds.psk_identity_hint("tls-server", hostname);
@@ -54,7 +54,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       append_tls_length_value(m_params, identity_hint, 2);
       }
 
-   if(kex_algo == "DH" || kex_algo == "DHE_PSK")
+   if(kex_algo == Kex_Algo::DH || kex_algo == Kex_Algo::DHE_PSK)
       {
       const std::vector<std::string>& dh_groups =
                state.client_hello()->supported_dh_groups();
@@ -84,7 +84,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       append_tls_length_value(m_params, dh->public_value(), 2);
       m_kex_key.reset(dh.release());
       }
-   else if(kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
+   else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK)
       {
       const std::vector<std::string>& curves =
          state.client_hello()->supported_ecc_curves();
@@ -134,7 +134,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       append_tls_length_value(m_params, ecdh_public_val, 1);
       }
 #if defined(BOTAN_HAS_SRP6)
-   else if(kex_algo == "SRP_SHA")
+   else if(kex_algo == Kex_Algo::SRP_SHA)
       {
       const std::string srp_identifier = state.client_hello()->srp_identifier();
 
@@ -165,7 +165,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       }
 #endif
 #if defined(BOTAN_HAS_CECPQ1)
-   else if(kex_algo == "CECPQ1")
+   else if(kex_algo == Kex_Algo::CECPQ1)
       {
       std::vector<uint8_t> cecpq1_offer(CECPQ1_OFFER_BYTES);
       m_cecpq1_key.reset(new CECPQ1_key);
@@ -173,12 +173,13 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       append_tls_length_value(m_params, cecpq1_offer, 2);
       }
 #endif
-   else if(kex_algo != "PSK")
+   else if(kex_algo != Kex_Algo::PSK)
       {
-      throw Internal_Error("Server_Key_Exchange: Unknown kex type " + kex_algo);
+      throw Internal_Error("Server_Key_Exchange: Unknown kex type " +
+                           kex_method_to_string(kex_algo));
       }
 
-   if(state.ciphersuite().sig_algo() != "")
+   if(state.ciphersuite().signature_used())
       {
       BOTAN_ASSERT(signing_key, "Signing key was set");
 
@@ -200,8 +201,8 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 * Deserialize a Server Key Exchange message
 */
 Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
-                                         const std::string& kex_algo,
-                                         const std::string& sig_algo,
+                                         const Kex_Algo kex_algo,
+                                         const Sig_Algo sig_algo,
                                          Protocol_Version version)
    {
    TLS_Data_Reader reader("ServerKeyExchange", buf);
@@ -212,12 +213,12 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
    * is prepared.
    */
 
-   if(kex_algo == "PSK" || kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
+   if(kex_algo == Kex_Algo::PSK || kex_algo == Kex_Algo::DHE_PSK || kex_algo == Kex_Algo::ECDHE_PSK)
       {
       reader.get_string(2, 0, 65535); // identity hint
       }
 
-   if(kex_algo == "DH" || kex_algo == "DHE_PSK")
+   if(kex_algo == Kex_Algo::DH || kex_algo == Kex_Algo::DHE_PSK)
       {
       // 3 bigints, DH p, g, Y
 
@@ -226,13 +227,13 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
          reader.get_range<uint8_t>(2, 1, 65535);
          }
       }
-   else if(kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
+   else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK)
       {
       reader.get_byte(); // curve type
       reader.get_uint16_t(); // curve id
       reader.get_range<uint8_t>(1, 1, 255); // public key
       }
-   else if(kex_algo == "SRP_SHA")
+   else if(kex_algo == Kex_Algo::SRP_SHA)
       {
       // 2 bigints (N,g) then salt, then server B
 
@@ -241,17 +242,18 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
       reader.get_range<uint8_t>(1, 1, 255);
       reader.get_range<uint8_t>(2, 1, 65535);
       }
-   else if(kex_algo == "CECPQ1")
+   else if(kex_algo == Kex_Algo::CECPQ1)
       {
       // u16 blob
       reader.get_range<uint8_t>(2, 1, 65535);
       }
-   else if(kex_algo != "PSK")
-      throw Decoding_Error("Server_Key_Exchange: Unsupported kex type " + kex_algo);
+   else if(kex_algo != Kex_Algo::PSK)
+      throw Decoding_Error("Server_Key_Exchange: Unsupported kex type " +
+                           kex_method_to_string(kex_algo));
 
    m_params.assign(buf.data(), buf.data() + reader.read_so_far());
 
-   if(sig_algo != "")
+   if(sig_algo != Sig_Algo::ANONYMOUS && sig_algo != Sig_Algo::IMPLICIT)
       {
       if(version.supports_negotiable_signature_algorithms())
          {

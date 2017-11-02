@@ -1113,14 +1113,20 @@ class TLS_Unit_Tests final : public Test
 
          for(auto const& version : versions)
             {
+            Test::Result result("");
+
             if(version.is_datagram_protocol())
                {
-               results.push_back(test_dtls_handshake(version, creds, policy, rng, client_ses, server_ses));
+               result = test_dtls_handshake(version, creds, policy, rng, client_ses, server_ses);
                }
             else
                {
-               results.push_back(test_tls_handshake(version, creds, policy, rng, client_ses, server_ses));
+               result = test_tls_handshake(version, creds, policy, rng, client_ses, server_ses);
                }
+
+            if(result.tests_failed() > 0)
+               result.test_note("Tested with policy " + policy.to_string());
+            results.push_back(result);
             }
          }
 
