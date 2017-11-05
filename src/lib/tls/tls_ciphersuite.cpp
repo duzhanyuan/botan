@@ -53,7 +53,7 @@ bool Ciphersuite::ecc_ciphersuite() const
    {
    return kex_method() == Kex_Algo::ECDH ||
           kex_method() == Kex_Algo::ECDHE_PSK ||
-          auth_method() == Sig_Algo::ECDSA;
+          auth_method() == Auth_Method::ECDSA;
    }
 
 bool Ciphersuite::cbc_ciphersuite() const
@@ -63,8 +63,8 @@ bool Ciphersuite::cbc_ciphersuite() const
 
 bool Ciphersuite::signature_used() const
    {
-   return auth_method() != Sig_Algo::ANONYMOUS &&
-          auth_method() != Sig_Algo::IMPLICIT;
+   return auth_method() != Auth_Method::ANONYMOUS &&
+          auth_method() != Auth_Method::IMPLICIT;
    }
 
 Ciphersuite Ciphersuite::by_id(uint16_t suite)
@@ -175,19 +175,19 @@ bool Ciphersuite::is_usable() const
 #endif
       }
 
-   if(auth_method() == Sig_Algo::DSA)
+   if(auth_method() == Auth_Method::DSA)
       {
 #if !defined(BOTAN_HAS_DSA)
       return false;
 #endif
       }
-   else if(auth_method() == Sig_Algo::ECDSA)
+   else if(auth_method() == Auth_Method::ECDSA)
       {
 #if !defined(BOTAN_HAS_ECDSA)
       return false;
 #endif
       }
-   else if(auth_method() == Sig_Algo::RSA)
+   else if(auth_method() == Auth_Method::RSA)
       {
 #if !defined(BOTAN_HAS_RSA)
       return false;

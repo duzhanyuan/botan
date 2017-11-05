@@ -63,7 +63,7 @@ enum class Nonce_Format {
 
 // TODO encoding should match signature_algorithms extension
 // TODO this should include hash etc as in TLS v1.3
-enum class Sig_Algo {
+enum class Auth_Method {
    RSA,
    DSA,
    ECDSA,
@@ -73,8 +73,8 @@ enum class Sig_Algo {
    ANONYMOUS
 };
 
-std::string auth_method_to_string(Sig_Algo method);
-Sig_Algo auth_method_from_string(const std::string& str);
+std::string auth_method_to_string(Auth_Method method);
+Auth_Method auth_method_from_string(const std::string& str);
 
 enum class Kex_Algo {
    STATIC_RSA,

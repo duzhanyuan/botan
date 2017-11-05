@@ -202,7 +202,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 */
 Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
                                          const Kex_Algo kex_algo,
-                                         const Sig_Algo sig_algo,
+                                         const Auth_Method auth_method,
                                          Protocol_Version version)
    {
    TLS_Data_Reader reader("ServerKeyExchange", buf);
@@ -253,7 +253,7 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
 
    m_params.assign(buf.data(), buf.data() + reader.read_so_far());
 
-   if(sig_algo != Sig_Algo::ANONYMOUS && sig_algo != Sig_Algo::IMPLICIT)
+   if(auth_method != Auth_Method::ANONYMOUS && auth_method != Auth_Method::IMPLICIT)
       {
       if(version.supports_negotiable_signature_algorithms())
          {

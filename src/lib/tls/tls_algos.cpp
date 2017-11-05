@@ -80,35 +80,35 @@ Kex_Algo kex_method_from_string(const std::string& str)
    throw Invalid_Argument("Unknown kex method " + str);
    }
 
-std::string auth_method_to_string(Sig_Algo method)
+std::string auth_method_to_string(Auth_Method method)
    {
    switch(method)
       {
-      case Sig_Algo::RSA:
+      case Auth_Method::RSA:
          return "RSA";
-      case Sig_Algo::DSA:
+      case Auth_Method::DSA:
          return "DSA";
-      case Sig_Algo::ECDSA:
+      case Auth_Method::ECDSA:
          return "ECDSA";
-      case Sig_Algo::IMPLICIT:
+      case Auth_Method::IMPLICIT:
          return "IMPLICIT";
-      case Sig_Algo::ANONYMOUS:
+      case Auth_Method::ANONYMOUS:
          return "ANONYMOUS";
       }
 
     throw Invalid_State("auth_method_to_string unknown enum value");
    }
 
-Sig_Algo auth_method_from_string(const std::string& str)
+Auth_Method auth_method_from_string(const std::string& str)
    {
    if(str == "RSA")
-      return Sig_Algo::RSA;
+      return Auth_Method::RSA;
    if(str == "DSA")
-      return Sig_Algo::DSA;
+      return Auth_Method::DSA;
    if(str == "ECDSA")
-      return Sig_Algo::ECDSA;
+      return Auth_Method::ECDSA;
    if(str == "ANONYMOUS" || str == "")
-      return Sig_Algo::ANONYMOUS;
+      return Auth_Method::ANONYMOUS;
 
    throw Invalid_Argument("Bad signature method " + str);
    }

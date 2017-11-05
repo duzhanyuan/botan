@@ -19,7 +19,7 @@ def to_ciphersuite_info(code, name):
     (sig_and_kex,cipher_and_mac) = name.split('_WITH_')
 
     if sig_and_kex == 'RSA':
-        sig_algo = 'RSA'
+        sig_algo = 'IMPLICIT'
         kex_algo = 'RSA'
     elif 'PSK' in sig_and_kex:
         sig_algo = 'IMPLICIT'
@@ -320,7 +320,7 @@ const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
     for code in sorted(suites.keys()):
         info = suites[code]
         assert len(info) == 10
-        suite_expr = 'Ciphersuite(0x%s, "%s", Sig_Algo::%s, Kex_Algo::%s, "%s", %d, "%s", %d, KDF_Algo::%s, Nonce_Format::%s)' % (
+        suite_expr = 'Ciphersuite(0x%s, "%s", Auth_Method::%s, Kex_Algo::%s, "%s", %d, "%s", %d, KDF_Algo::%s, Nonce_Format::%s)' % (
             code, info[0], info[2], info[3], info[4], info[5], info[6], info[7], info[8].replace('-','_'), info[9])
 
         suite_info += "      " + suite_expr + ",\n"

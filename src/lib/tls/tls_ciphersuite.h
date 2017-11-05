@@ -82,7 +82,7 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
       */
       std::string sig_algo() const { return auth_method_to_string(auth_method()); }
 
-      Sig_Algo auth_method() const { return m_sig_algo; }
+      Auth_Method auth_method() const { return m_auth_method; }
 
       /**
       * @return symmetric cipher algorithm used by this ciphersuite
@@ -126,7 +126,7 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
 
       Ciphersuite(uint16_t ciphersuite_code,
                   const char* iana_id,
-                  Sig_Algo sig_algo,
+                  Auth_Method auth_method,
                   Kex_Algo kex_algo,
                   const char* cipher_algo,
                   size_t cipher_keylen,
@@ -136,7 +136,7 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
                   Nonce_Format nonce_format) :
          m_ciphersuite_code(ciphersuite_code),
          m_iana_id(iana_id),
-         m_sig_algo(sig_algo),
+         m_auth_method(auth_method),
          m_kex_algo(kex_algo),
          m_prf_algo(prf_algo),
          m_nonce_format(nonce_format),
@@ -156,7 +156,7 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
       */
       const char* m_iana_id = nullptr;
 
-      Sig_Algo m_sig_algo = Sig_Algo::ANONYMOUS;
+      Auth_Method m_auth_method = Auth_Method::ANONYMOUS;
       Kex_Algo m_kex_algo = Kex_Algo::STATIC_RSA;
       KDF_Algo m_prf_algo = KDF_Algo::SHA_1;
       Nonce_Format m_nonce_format = Nonce_Format::CBC_MODE;

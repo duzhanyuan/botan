@@ -340,7 +340,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                                 " is unacceptable by policy");
             }
 
-         if(state.ciphersuite().signature_used())
+         if(state.ciphersuite().signature_used() || state.ciphersuite().kex_method() == Kex_Algo::STATIC_RSA)
             {
             state.set_expected_next(CERTIFICATE);
             }
@@ -386,7 +386,10 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
 
       std::unique_ptr<Public_Key> peer_key(server_certs[0].subject_public_key());
 
-      if(peer_key->algo_name() != state.ciphersuite().sig_algo())
+      const std::string expected_key_type =
+         state.ciphersuite().signature_used() ? state.ciphersuite().sig_algo() : "RSA";
+
+      if(peer_key->algo_name() != expected_key_type)
          throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                              "Certificate key type did not match ciphersuite");
 

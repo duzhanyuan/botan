@@ -217,7 +217,7 @@ uint16_t choose_ciphersuite(
             continue;
             }
 
-         // Client reques
+         // Client request
          if(!client_sig_algos.empty() && client_sig_algos.count(sig_algo) == 0)
             {
             continue;
@@ -847,16 +847,17 @@ void Server::session_create(Server_Handshake_State& pending_state,
 
    Private_Key* private_key = nullptr;
 
-   if(pending_suite.signature_used())
+   if(pending_suite.signature_used() || pending_suite.kex_method() == Kex_Algo::STATIC_RSA)
       {
-      const std::string sig_algo = pending_suite.sig_algo();
+      const std::string algo_used =
+         pending_suite.signature_used() ? pending_suite.sig_algo() : "RSA";
 
-      BOTAN_ASSERT(!cert_chains[sig_algo].empty(),
+      BOTAN_ASSERT(!cert_chains[algo_used].empty(),
                      "Attempting to send empty certificate chain");
 
       pending_state.server_certs(new Certificate(pending_state.handshake_io(),
                                                  pending_state.hash(),
-                                                 cert_chains[sig_algo]));
+                                                 cert_chains[algo_used]));
 
       private_key = m_creds.private_key_for(
          pending_state.server_certs()->cert_chain()[0],

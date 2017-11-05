@@ -89,7 +89,8 @@ std::vector<std::string> Policy::allowed_signature_methods() const
       "ECDSA",
       "RSA",
       //"DSA",
-      //"" (anon)
+      //"IMPLICIT",
+      //"ANONYMOUS" (anon)
       };
    }
 
@@ -480,7 +481,7 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
       if(!value_exists(sigs, suite.sig_algo()))
          {
          // allow if it's an empty sig algo and we want to use PSK
-         if(suite.auth_method() != Sig_Algo::IMPLICIT || !suite.psk_ciphersuite())
+         if(suite.auth_method() != Auth_Method::IMPLICIT || !suite.psk_ciphersuite())
             continue;
          }
 
