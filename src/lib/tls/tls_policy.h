@@ -9,6 +9,7 @@
 #define BOTAN_TLS_POLICY_H_
 
 #include <botan/tls_version.h>
+#include <botan/tls_algos.h>
 #include <botan/tls_ciphersuite.h>
 #include <vector>
 #include <map>
@@ -56,6 +57,8 @@ class BOTAN_PUBLIC_API(2,0) Policy
       * use, in order of preference. Allowed values RSA and DSA.
       */
       virtual std::vector<std::string> allowed_signature_methods() const;
+
+      virtual std::vector<Signature_Method> allowed_signature_schemes() const;
 
       /**
       * The minimum signature strength we will accept

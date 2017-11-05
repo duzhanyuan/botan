@@ -19,6 +19,18 @@ namespace Botan {
 
 namespace TLS {
 
+std::vector<Signature_Method> Policy::allowed_signature_schemes() const
+   {
+   return std::vector<Signature_Method>{
+      ECDSA_SHA512,
+      ECDSA_SHA384,
+      ECDSA_SHA256,
+      RSA_PKCS1_SHA512,
+      RSA_PKCS1_SHA384,
+      RSA_PKCS1_SHA256,
+      };
+   }
+
 std::vector<std::string> Policy::allowed_ciphers() const
    {
    return {

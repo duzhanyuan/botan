@@ -8,6 +8,8 @@
 #define BOTAN_TLS_ALGO_IDS_H_
 
 #include <botan/types.h>
+#include <string>
+#include <vector>
 
 namespace Botan {
 
@@ -75,6 +77,35 @@ enum class Auth_Method {
 
 std::string auth_method_to_string(Auth_Method method);
 Auth_Method auth_method_from_string(const std::string& str);
+
+/*
+* This matches the wire encoding
+*/
+enum class Signature_Method : uint16_t {
+   ANONYMOUS_NONE = 0x0000,
+
+   RSA_PKCS1_SHA1   = 0x0201,
+   RSA_PKCS1_SHA256 = 0x0401,
+   RSA_PKCS1_SHA384 = 0x0501,
+   RSA_PKCS1_SHA512 = 0x0601,
+
+   DSA_SHA1   = 0x0202,
+   DSA_SHA256 = 0x0402,
+   DSA_SHA384 = 0x0502,
+   DSA_SHA512 = 0x0602,
+
+   ECDSA_SHA1   = 0x0203,
+   ECDSA_SHA256 = 0x0403,
+   ECDSA_SHA384 = 0x0503,
+   ECDSA_SHA512 = 0x0603,
+
+   RSA_PSS_SHA256 = 0x0804,
+   RSA_PSS_SHA384 = 0x0805,
+   RSA_PSS_SHA512 = 0x0806,
+
+   EDDSA_25519 = 0x0807,
+   EDDSA_448   = 0x0808,
+};
 
 enum class Kex_Algo {
    STATIC_RSA,
