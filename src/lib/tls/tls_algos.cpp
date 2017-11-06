@@ -143,6 +143,9 @@ std::string hash_function_of_scheme(Signature_Scheme scheme)
       case Signature_Scheme::EDDSA_25519:
       case Signature_Scheme::EDDSA_448:
          return "Pure";
+
+      case Signature_Scheme::NONE:
+         return "";
       }
 
    throw Invalid_State("Unknown signature algorithm enum");
@@ -203,6 +206,9 @@ std::string signature_algorithm_of_scheme(Signature_Scheme scheme)
 
       case Signature_Scheme::EDDSA_448:
          return "Ed448";
+
+      case Signature_Scheme::NONE:
+         return "";
       }
 
    throw Invalid_State("Unknown signature algorithm enum");
@@ -250,6 +256,9 @@ std::string sig_scheme_to_string(Signature_Scheme scheme)
          return "EDDSA_25519";
       case Signature_Scheme::EDDSA_448:
          return "EDDSA_448";
+
+      case Signature_Scheme::NONE:
+         return "";
       }
 
    throw Invalid_State("Unknown signature algorithm enum");

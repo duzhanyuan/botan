@@ -184,7 +184,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       BOTAN_ASSERT(signing_key, "Signing key was set");
 
       std::pair<std::string, Signature_Format> format =
-         state.choose_sig_format(*signing_key, m_hash_algo, m_sig_algo, false, policy);
+         state.choose_sig_format(*signing_key, m_scheme, false, policy);
 
       PK_Signer signer(*signing_key, rng, format.first, format.second);
 
@@ -257,8 +257,7 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
       {
       if(version.supports_negotiable_signature_algorithms())
          {
-         m_hash_algo = Signature_Algorithms::hash_algo_name(reader.get_byte());
-         m_sig_algo = Signature_Algorithms::sig_algo_name(reader.get_byte());
+         m_scheme = static_cast<Signature_Scheme>(reader.get_uint16_t());
          }
 
       m_signature = reader.get_range<uint8_t>(2, 0, 65535);
@@ -276,11 +275,11 @@ std::vector<uint8_t> Server_Key_Exchange::serialize() const
 
    if(m_signature.size())
       {
-      // This should be an explicit version check
-      if(m_hash_algo != "" && m_sig_algo != "")
+      if(m_scheme != Signature_Scheme::NONE)
          {
-         buf.push_back(Signature_Algorithms::hash_algo_code(m_hash_algo));
-         buf.push_back(Signature_Algorithms::sig_algo_code(m_sig_algo));
+         const uint16_t scheme_code = static_cast<uint16_t>(m_scheme);
+         buf.push_back(get_byte(0, scheme_code));
+         buf.push_back(get_byte(1, scheme_code));
          }
 
       append_tls_length_value(buf, m_signature, 2);
@@ -299,8 +298,7 @@ bool Server_Key_Exchange::verify(const Public_Key& server_key,
    policy.check_peer_key_acceptable(server_key);
 
    std::pair<std::string, Signature_Format> format =
-      state.parse_sig_format(server_key, m_hash_algo, m_sig_algo,
-                             false, policy);
+      state.parse_sig_format(server_key, m_scheme, false, policy);
 
    PK_Verifier verifier(server_key, format.first, format.second);
 

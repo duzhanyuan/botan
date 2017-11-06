@@ -371,95 +371,72 @@ KDF* Handshake_State::protocol_specific_prf() const
    return get_kdf("TLS-PRF");
    }
 
-namespace {
-
-std::string choose_hash(const std::string& sig_algo,
-                        const std::vector<Signature_Scheme>& client_schemes,
-                        Protocol_Version negotiated_version,
-                        const Policy& policy)
-   {
-   if(!negotiated_version.supports_negotiable_signature_algorithms())
-      {
-      if(sig_algo == "RSA")
-         return "Parallel(MD5,SHA-160)";
-
-      if(sig_algo == "DSA")
-         return "SHA-1";
-
-      if(sig_algo == "ECDSA")
-         return "SHA-1";
-
-      throw Internal_Error("Unknown TLS signature algo " + sig_algo);
-      }
-
-   if(client_schemes.size() > 0)
-      {
-      /*
-      * Choose our most preferred hash that the counterparty supports
-      * in pairing with the signature algorithm we want to use.
-      */
-      std::vector<Signature_Scheme> allowed = policy.allowed_signature_schemes();
-
-      for(Signature_Scheme scheme : client_schemes)
-         {
-         if(signature_algorithm_of_scheme(scheme) == sig_algo)
-            {
-            if(std::find(allowed.begin(), allowed.end(), scheme) != allowed.end())
-               {
-               return hash_function_of_scheme(scheme);
-               }
-            }
-         }
-      }
-
-   // TLS v1.2 default hash if the counterparty sent nothing
-   return "SHA-1";
-   }
-
-}
-
 std::pair<std::string, Signature_Format>
 Handshake_State::choose_sig_format(const Private_Key& key,
-                                   std::string& hash_algo_out,
-                                   std::string& sig_algo_out,
+                                   Signature_Scheme& scheme_out,
                                    bool for_client_auth,
                                    const Policy& policy) const
    {
    const std::string sig_algo = key.algo_name();
 
-   std::vector<Signature_Scheme> schemes =
-      (for_client_auth) ? cert_req()->signature_schemes() : client_hello()->signature_schemes();
-
-   const std::string hash_algo = choose_hash(sig_algo,
-                                             schemes,
-                                             this->version(),
-                                             policy);
-
    if(this->version().supports_negotiable_signature_algorithms())
       {
-      // We skip this check for v1.0 since you're stuck with SHA-1 regardless
+      const std::vector<Signature_Scheme> allowed = policy.allowed_signature_schemes();
 
-      if(!policy.allowed_signature_hash(hash_algo))
+      std::vector<Signature_Scheme> schemes =
+         (for_client_auth) ? cert_req()->signature_schemes() : client_hello()->signature_schemes();
+
+      if(schemes.empty())
+         {
+         // Implicit SHA-1
+         schemes.push_back(Signature_Scheme::RSA_PKCS1_SHA1);
+         schemes.push_back(Signature_Scheme::ECDSA_SHA1);
+         schemes.push_back(Signature_Scheme::DSA_SHA1);
+         }
+
+      for(Signature_Scheme scheme : schemes)
+         {
+         if(signature_algorithm_of_scheme(scheme) == sig_algo)
+            {
+            if(std::find(allowed.begin(), allowed.end(), scheme) != allowed.end())
+               {
+               scheme_out = scheme;
+               break;
+               }
+            }
+         }
+
+      const std::string hash = hash_function_of_scheme(scheme_out);
+
+      if(!policy.allowed_signature_hash(hash))
          {
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Policy refuses to accept signing with any hash supported by peer");
          }
 
-      hash_algo_out = hash_algo;
-      sig_algo_out = sig_algo;
+      if(sig_algo == "RSA")
+         {
+         const std::string padding = "EMSA3(" + hash + ")";
+         return std::make_pair(padding, IEEE_1363);
+         }
+      else if(sig_algo == "DSA" || sig_algo == "ECDSA")
+         {
+         const std::string padding = "EMSA1(" + hash + ")";
+         return std::make_pair(padding, DER_SEQUENCE);
+         }
       }
-
-   if(sig_algo == "RSA")
+   else
       {
-      const std::string padding = "EMSA3(" + hash_algo + ")";
-
-      return std::make_pair(padding, IEEE_1363);
-      }
-   else if(sig_algo == "DSA" || sig_algo == "ECDSA")
-      {
-      const std::string padding = "EMSA1(" + hash_algo + ")";
-
-      return std::make_pair(padding, DER_SEQUENCE);
+      if(sig_algo == "RSA")
+         {
+         const std::string padding = "EMSA3(Parallel(MD5,SHA-160))";
+         return std::make_pair(padding, IEEE_1363);
+         }
+      else if(sig_algo == "DSA" || sig_algo == "ECDSA")
+         {
+         const std::string padding = "EMSA1(SHA-1)";
+         return std::make_pair(padding, DER_SEQUENCE);
+         }
       }
 
    throw Invalid_Argument(sig_algo + " is invalid/unknown for TLS signatures");
@@ -488,8 +465,7 @@ bool supported_algos_include(
 
 std::pair<std::string, Signature_Format>
 Handshake_State::parse_sig_format(const Public_Key& key,
-                                  const std::string& input_hash_algo,
-                                  const std::string& input_sig_algo,
+                                  Signature_Scheme scheme,
                                   bool for_client_auth,
                                   const Policy& policy) const
    {
@@ -505,13 +481,13 @@ Handshake_State::parse_sig_format(const Public_Key& key,
 
    if(this->version().supports_negotiable_signature_algorithms())
       {
-      if(input_sig_algo != key_type)
-         throw Decoding_Error("Counterparty sent inconsistent key and sig types");
-
-      if(input_hash_algo == "")
+      if(scheme == Signature_Scheme::NONE)
          throw Decoding_Error("Counterparty did not send hash/sig IDS");
 
-      hash_algo = input_hash_algo;
+      if(key_type != signature_algorithm_of_scheme(scheme))
+         throw Decoding_Error("Counterparty sent inconsistent key and sig types");
+
+      hash_algo = hash_function_of_scheme(scheme);
 
       if(for_client_auth && !cert_req())
          {
@@ -537,7 +513,7 @@ Handshake_State::parse_sig_format(const Public_Key& key,
       }
    else
       {
-      if(input_hash_algo != "" || input_sig_algo != "")
+      if(scheme != Signature_Scheme::NONE)
          throw Decoding_Error("Counterparty sent hash/sig IDs with old version");
 
       if(key_type == "RSA")

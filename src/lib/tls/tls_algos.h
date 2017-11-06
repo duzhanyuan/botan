@@ -82,6 +82,8 @@ Auth_Method auth_method_from_string(const std::string& str);
 * This matches the wire encoding
 */
 enum class Signature_Scheme : uint16_t {
+   NONE             = 0x0000,
+
    RSA_PKCS1_SHA1   = 0x0201,
    RSA_PKCS1_SHA256 = 0x0401,
    RSA_PKCS1_SHA384 = 0x0501,

@@ -461,9 +461,8 @@ class BOTAN_UNSTABLE_API Certificate_Verify final : public Handshake_Message
    private:
       std::vector<uint8_t> serialize() const override;
 
-      std::string m_sig_algo; // sig algo used to create signature
-      std::string m_hash_algo; // hash used to create signature
       std::vector<uint8_t> m_signature;
+      Signature_Scheme m_scheme = Signature_Scheme::NONE;
    };
 
 /**
@@ -568,9 +567,8 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
 
       std::vector<uint8_t> m_params;
 
-      std::string m_sig_algo; // sig algo used to create signature
-      std::string m_hash_algo; // hash used to create signature
       std::vector<uint8_t> m_signature;
+      Signature_Scheme m_scheme = Signature_Scheme::NONE;
    };
 
 /**
