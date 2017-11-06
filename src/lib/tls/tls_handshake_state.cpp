@@ -374,7 +374,7 @@ KDF* Handshake_State::protocol_specific_prf() const
 namespace {
 
 std::string choose_hash(const std::string& sig_algo,
-                        const std::vector<Signature_Method>& client_schemes,
+                        const std::vector<Signature_Scheme>& client_schemes,
                         Protocol_Version negotiated_version,
                         const Policy& policy)
    {
@@ -398,9 +398,9 @@ std::string choose_hash(const std::string& sig_algo,
       * Choose our most preferred hash that the counterparty supports
       * in pairing with the signature algorithm we want to use.
       */
-      std::vector<Signature_Method> allowed = policy.allowed_signature_schemes();
+      std::vector<Signature_Scheme> allowed = policy.allowed_signature_schemes();
 
-      for(Signature_Method scheme : client_schemes)
+      for(Signature_Scheme scheme : client_schemes)
          {
          if(signature_algorithm_of_scheme(scheme) == sig_algo)
             {
@@ -427,7 +427,7 @@ Handshake_State::choose_sig_format(const Private_Key& key,
    {
    const std::string sig_algo = key.algo_name();
 
-   std::vector<Signature_Method> schemes =
+   std::vector<Signature_Scheme> schemes =
       (for_client_auth) ? cert_req()->signature_schemes() : client_hello()->signature_schemes();
 
    const std::string hash_algo = choose_hash(sig_algo,
@@ -468,11 +468,11 @@ Handshake_State::choose_sig_format(const Private_Key& key,
 namespace {
 
 bool supported_algos_include(
-   const std::vector<Signature_Method>& schemes,
+   const std::vector<Signature_Scheme>& schemes,
    const std::string& key_type,
    const std::string& hash_type)
    {
-   for(Signature_Method scheme : schemes)
+   for(Signature_Scheme scheme : schemes)
       {
       if(hash_function_of_scheme(scheme) == hash_type &&
          signature_algorithm_of_scheme(scheme) == key_type)
@@ -524,7 +524,7 @@ Handshake_State::parse_sig_format(const Public_Key& key,
       supported_algos list that we sent; it better be there.
       */
 
-      const std::vector<Signature_Method> supported_algos =
+      const std::vector<Signature_Scheme> supported_algos =
          for_client_auth ? cert_req()->signature_schemes() :
                            client_hello()->signature_schemes();
 

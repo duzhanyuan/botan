@@ -19,11 +19,11 @@ namespace Botan {
 
 namespace TLS {
 
-std::vector<Signature_Method> Policy::allowed_signature_schemes() const
+std::vector<Signature_Scheme> Policy::allowed_signature_schemes() const
    {
-   std::vector<Signature_Method> schemes;
+   std::vector<Signature_Scheme> schemes;
 
-   for(Signature_Method scheme : all_signature_schemes())
+   for(Signature_Scheme scheme : all_signature_schemes())
       {
       if(allowed_signature_method(signature_algorithm_of_scheme(scheme)) &&
          allowed_signature_hash(hash_function_of_scheme(scheme)))

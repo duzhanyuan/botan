@@ -313,19 +313,19 @@ class Signature_Algorithms final : public Extension
       static std::string sig_algo_name(uint8_t code);
       static uint8_t sig_algo_code(const std::string& name);
 
-      const std::vector<Signature_Method>& supported_schemes() const { return m_schemes; }
+      const std::vector<Signature_Scheme>& supported_schemes() const { return m_schemes; }
 
       std::vector<uint8_t> serialize() const override;
 
       bool empty() const override { return false; }
 
-      explicit Signature_Algorithms(const std::vector<Signature_Method>& schemes) :
+      explicit Signature_Algorithms(const std::vector<Signature_Scheme>& schemes) :
          m_schemes(schemes) {}
 
       Signature_Algorithms(TLS_Data_Reader& reader,
                            uint16_t extension_size);
    private:
-      std::vector<Signature_Method> m_schemes;
+      std::vector<Signature_Scheme> m_schemes;
    };
 
 /**

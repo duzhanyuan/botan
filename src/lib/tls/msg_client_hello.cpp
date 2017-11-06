@@ -300,16 +300,16 @@ bool Client_Hello::offered_suite(uint16_t ciphersuite) const
    return false;
    }
 
-std::vector<Signature_Method> Client_Hello::signature_schemes() const
+std::vector<Signature_Scheme> Client_Hello::signature_schemes() const
    {
-   std::vector<Signature_Method> methods;
+   std::vector<Signature_Scheme> schemes;
 
    if(Signature_Algorithms* sigs = m_extensions.get<Signature_Algorithms>())
       {
-      methods = sigs->supported_schemes();
+      schemes = sigs->supported_schemes();
       }
 
-   return methods;
+   return schemes;
    }
 
 std::vector<std::string> Client_Hello::supported_ecc_curves() const

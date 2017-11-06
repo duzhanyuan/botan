@@ -58,7 +58,7 @@ class BOTAN_PUBLIC_API(2,0) Policy
       */
       virtual std::vector<std::string> allowed_signature_methods() const;
 
-      virtual std::vector<Signature_Method> allowed_signature_schemes() const;
+      virtual std::vector<Signature_Scheme> allowed_signature_schemes() const;
 
       /**
       * The minimum signature strength we will accept

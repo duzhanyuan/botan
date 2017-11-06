@@ -217,23 +217,23 @@ uint16_t choose_ciphersuite(
 
          if(version.supports_negotiable_signature_algorithms())
             {
-            const std::vector<Signature_Method> allowed =
+            const std::vector<Signature_Scheme> allowed =
                policy.allowed_signature_schemes();
 
-            std::vector<Signature_Method> client_sig_methods =
+            std::vector<Signature_Scheme> client_sig_methods =
                client_hello.signature_schemes();
 
             if(client_sig_methods.empty())
                {
                // If empty, then implicit SHA-1 (TLS v1.2 rules)
-               client_sig_methods.push_back(Signature_Method::RSA_PKCS1_SHA1);
-               client_sig_methods.push_back(Signature_Method::ECDSA_SHA1);
-               client_sig_methods.push_back(Signature_Method::DSA_SHA1);
+               client_sig_methods.push_back(Signature_Scheme::RSA_PKCS1_SHA1);
+               client_sig_methods.push_back(Signature_Scheme::ECDSA_SHA1);
+               client_sig_methods.push_back(Signature_Scheme::DSA_SHA1);
                }
 
             bool we_support_some_hash_by_client = true;
 
-            for(Signature_Method scheme : client_sig_methods)
+            for(Signature_Scheme scheme : client_sig_methods)
                {
                if(signature_algorithm_of_scheme(scheme) == suite.sig_algo() &&
                   policy.allowed_signature_hash(hash_function_of_scheme(scheme)))

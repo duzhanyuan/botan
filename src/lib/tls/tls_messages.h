@@ -105,7 +105,7 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
 
       bool sent_fallback_scsv() const;
 
-      std::vector<Signature_Method> signature_schemes() const;
+      std::vector<Signature_Scheme> signature_schemes() const;
 
       std::vector<std::string> supported_ecc_curves() const;
 
@@ -410,7 +410,7 @@ class BOTAN_UNSTABLE_API Certificate_Req final : public Handshake_Message
 
       const std::vector<X509_DN>& acceptable_CAs() const { return m_names; }
 
-      const std::vector<Signature_Method>& signature_schemes() const
+      const std::vector<Signature_Scheme>& signature_schemes() const
          {
          return m_schemes;
          }
@@ -429,7 +429,7 @@ class BOTAN_UNSTABLE_API Certificate_Req final : public Handshake_Message
       std::vector<X509_DN> m_names;
       std::vector<std::string> m_cert_key_types;
 
-      std::vector<Signature_Method> m_schemes;
+      std::vector<Signature_Scheme> m_schemes;
    };
 
 /**

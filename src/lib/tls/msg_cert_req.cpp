@@ -99,7 +99,7 @@ Certificate_Req::Certificate_Req(const std::vector<uint8_t>& buf,
 
       for(size_t i = 0; i != algs.size(); i += 2)
          {
-         m_schemes.push_back(static_cast<Signature_Method>(make_uint16(algs[i], algs[i+1])));
+         m_schemes.push_back(static_cast<Signature_Scheme>(make_uint16(algs[i], algs[i+1])));
          }
       }
 

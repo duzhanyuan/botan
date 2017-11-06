@@ -113,142 +113,142 @@ Auth_Method auth_method_from_string(const std::string& str)
    throw Invalid_Argument("Bad signature method " + str);
    }
 
-std::string hash_function_of_scheme(Signature_Method scheme)
+std::string hash_function_of_scheme(Signature_Scheme scheme)
    {
    switch(scheme)
       {
-      case Signature_Method::DSA_SHA1:
-      case Signature_Method::ECDSA_SHA1:
-      case Signature_Method::RSA_PKCS1_SHA1:
+      case Signature_Scheme::DSA_SHA1:
+      case Signature_Scheme::ECDSA_SHA1:
+      case Signature_Scheme::RSA_PKCS1_SHA1:
          return "SHA-1";
 
-      case Signature_Method::DSA_SHA256:
-      case Signature_Method::ECDSA_SHA256:
-      case Signature_Method::RSA_PKCS1_SHA256:
-      case Signature_Method::RSA_PSS_SHA256:
+      case Signature_Scheme::DSA_SHA256:
+      case Signature_Scheme::ECDSA_SHA256:
+      case Signature_Scheme::RSA_PKCS1_SHA256:
+      case Signature_Scheme::RSA_PSS_SHA256:
          return "SHA-256";
 
-      case Signature_Method::DSA_SHA384:
-      case Signature_Method::ECDSA_SHA384:
-      case Signature_Method::RSA_PKCS1_SHA384:
-      case Signature_Method::RSA_PSS_SHA384:
+      case Signature_Scheme::DSA_SHA384:
+      case Signature_Scheme::ECDSA_SHA384:
+      case Signature_Scheme::RSA_PKCS1_SHA384:
+      case Signature_Scheme::RSA_PSS_SHA384:
          return "SHA-384";
 
-      case Signature_Method::DSA_SHA512:
-      case Signature_Method::ECDSA_SHA512:
-      case Signature_Method::RSA_PKCS1_SHA512:
-      case Signature_Method::RSA_PSS_SHA512:
+      case Signature_Scheme::DSA_SHA512:
+      case Signature_Scheme::ECDSA_SHA512:
+      case Signature_Scheme::RSA_PKCS1_SHA512:
+      case Signature_Scheme::RSA_PSS_SHA512:
          return "SHA-512";
 
-      case Signature_Method::EDDSA_25519:
-      case Signature_Method::EDDSA_448:
+      case Signature_Scheme::EDDSA_25519:
+      case Signature_Scheme::EDDSA_448:
          return "Pure";
       }
 
    throw Invalid_State("Unknown signature algorithm enum");
    }
 
-const std::vector<Signature_Method>& all_signature_schemes()
+const std::vector<Signature_Scheme>& all_signature_schemes()
    {
-   static const std::vector<Signature_Method> all_schemes = {
-      Signature_Method::RSA_PKCS1_SHA1,
-      Signature_Method::RSA_PKCS1_SHA256,
-      Signature_Method::RSA_PKCS1_SHA384,
-      Signature_Method::RSA_PKCS1_SHA512,
-      Signature_Method::DSA_SHA1,
-      Signature_Method::DSA_SHA256,
-      Signature_Method::DSA_SHA384,
-      Signature_Method::DSA_SHA512,
-      Signature_Method::ECDSA_SHA1,
-      Signature_Method::ECDSA_SHA256,
-      Signature_Method::ECDSA_SHA384,
-      Signature_Method::ECDSA_SHA512,
-      Signature_Method::RSA_PSS_SHA256,
-      Signature_Method::RSA_PSS_SHA384,
-      Signature_Method::RSA_PSS_SHA512,
-      Signature_Method::EDDSA_25519,
-      Signature_Method::EDDSA_448,
+   static const std::vector<Signature_Scheme> all_schemes = {
+      Signature_Scheme::RSA_PKCS1_SHA1,
+      Signature_Scheme::RSA_PKCS1_SHA256,
+      Signature_Scheme::RSA_PKCS1_SHA384,
+      Signature_Scheme::RSA_PKCS1_SHA512,
+      Signature_Scheme::DSA_SHA1,
+      Signature_Scheme::DSA_SHA256,
+      Signature_Scheme::DSA_SHA384,
+      Signature_Scheme::DSA_SHA512,
+      Signature_Scheme::ECDSA_SHA1,
+      Signature_Scheme::ECDSA_SHA256,
+      Signature_Scheme::ECDSA_SHA384,
+      Signature_Scheme::ECDSA_SHA512,
+      Signature_Scheme::RSA_PSS_SHA256,
+      Signature_Scheme::RSA_PSS_SHA384,
+      Signature_Scheme::RSA_PSS_SHA512,
+      Signature_Scheme::EDDSA_25519,
+      Signature_Scheme::EDDSA_448,
    };
 
    return all_schemes;
    }
 
-std::string signature_algorithm_of_scheme(Signature_Method scheme)
+std::string signature_algorithm_of_scheme(Signature_Scheme scheme)
    {
    switch(scheme)
       {
-      case Signature_Method::RSA_PKCS1_SHA1:
-      case Signature_Method::RSA_PKCS1_SHA256:
-      case Signature_Method::RSA_PKCS1_SHA384:
-      case Signature_Method::RSA_PKCS1_SHA512:
-      case Signature_Method::RSA_PSS_SHA256:
-      case Signature_Method::RSA_PSS_SHA384:
-      case Signature_Method::RSA_PSS_SHA512:
+      case Signature_Scheme::RSA_PKCS1_SHA1:
+      case Signature_Scheme::RSA_PKCS1_SHA256:
+      case Signature_Scheme::RSA_PKCS1_SHA384:
+      case Signature_Scheme::RSA_PKCS1_SHA512:
+      case Signature_Scheme::RSA_PSS_SHA256:
+      case Signature_Scheme::RSA_PSS_SHA384:
+      case Signature_Scheme::RSA_PSS_SHA512:
          return "RSA";
 
-      case Signature_Method::DSA_SHA1:
-      case Signature_Method::DSA_SHA256:
-      case Signature_Method::DSA_SHA384:
-      case Signature_Method::DSA_SHA512:
+      case Signature_Scheme::DSA_SHA1:
+      case Signature_Scheme::DSA_SHA256:
+      case Signature_Scheme::DSA_SHA384:
+      case Signature_Scheme::DSA_SHA512:
          return "DSA";
 
-      case Signature_Method::ECDSA_SHA1:
-      case Signature_Method::ECDSA_SHA256:
-      case Signature_Method::ECDSA_SHA384:
-      case Signature_Method::ECDSA_SHA512:
+      case Signature_Scheme::ECDSA_SHA1:
+      case Signature_Scheme::ECDSA_SHA256:
+      case Signature_Scheme::ECDSA_SHA384:
+      case Signature_Scheme::ECDSA_SHA512:
          return "ECDSA";
 
-      case Signature_Method::EDDSA_25519:
+      case Signature_Scheme::EDDSA_25519:
          return "Ed25519";
 
-      case Signature_Method::EDDSA_448:
+      case Signature_Scheme::EDDSA_448:
          return "Ed448";
       }
 
    throw Invalid_State("Unknown signature algorithm enum");
    }
 
-std::string sig_scheme_to_string(Signature_Method scheme)
+std::string sig_scheme_to_string(Signature_Scheme scheme)
    {
    switch(scheme)
       {
-      case Signature_Method::RSA_PKCS1_SHA1:
+      case Signature_Scheme::RSA_PKCS1_SHA1:
          return "RSA_PKCS1_SHA1";
-      case Signature_Method::RSA_PKCS1_SHA256:
+      case Signature_Scheme::RSA_PKCS1_SHA256:
          return "RSA_PKCS1_SHA256";
-      case Signature_Method::RSA_PKCS1_SHA384:
+      case Signature_Scheme::RSA_PKCS1_SHA384:
          return "RSA_PKCS1_SHA384";
-      case Signature_Method::RSA_PKCS1_SHA512:
+      case Signature_Scheme::RSA_PKCS1_SHA512:
          return "RSA_PKCS1_SHA512";
 
-      case Signature_Method::DSA_SHA1:
+      case Signature_Scheme::DSA_SHA1:
          return "DSA_SHA1";
-      case Signature_Method::DSA_SHA256:
+      case Signature_Scheme::DSA_SHA256:
          return "DSA_SHA256";
-      case Signature_Method::DSA_SHA384:
+      case Signature_Scheme::DSA_SHA384:
          return "DSA_SHA384";
-      case Signature_Method::DSA_SHA512:
+      case Signature_Scheme::DSA_SHA512:
          return "DSA_SHA512";
 
-      case Signature_Method::ECDSA_SHA1:
+      case Signature_Scheme::ECDSA_SHA1:
          return "ECDSA_SHA1";
-      case Signature_Method::ECDSA_SHA256:
+      case Signature_Scheme::ECDSA_SHA256:
          return "ECDSA_SHA256";
-      case Signature_Method::ECDSA_SHA384:
+      case Signature_Scheme::ECDSA_SHA384:
          return "ECDSA_SHA384";
-      case Signature_Method::ECDSA_SHA512:
+      case Signature_Scheme::ECDSA_SHA512:
          return "ECDSA_SHA512";
 
-      case Signature_Method::RSA_PSS_SHA256:
+      case Signature_Scheme::RSA_PSS_SHA256:
          return "RSA_PSS_SHA256";
-      case Signature_Method::RSA_PSS_SHA384:
+      case Signature_Scheme::RSA_PSS_SHA384:
          return "RSA_PSS_SHA384";
-      case Signature_Method::RSA_PSS_SHA512:
+      case Signature_Scheme::RSA_PSS_SHA512:
          return "RSA_PSS_SHA512";
 
-      case Signature_Method::EDDSA_25519:
+      case Signature_Scheme::EDDSA_25519:
          return "EDDSA_25519";
-      case Signature_Method::EDDSA_448:
+      case Signature_Scheme::EDDSA_448:
          return "EDDSA_448";
       }
 

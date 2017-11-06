@@ -81,7 +81,7 @@ Auth_Method auth_method_from_string(const std::string& str);
 /*
 * This matches the wire encoding
 */
-enum class Signature_Method : uint16_t {
+enum class Signature_Scheme : uint16_t {
    RSA_PKCS1_SHA1   = 0x0201,
    RSA_PKCS1_SHA256 = 0x0401,
    RSA_PKCS1_SHA384 = 0x0501,
@@ -105,11 +105,11 @@ enum class Signature_Method : uint16_t {
    EDDSA_448   = 0x0808,
 };
 
-const std::vector<Signature_Method>& all_signature_schemes();
+const std::vector<Signature_Scheme>& all_signature_schemes();
 
-std::string BOTAN_UNSTABLE_API sig_scheme_to_string(Signature_Method scheme);
-std::string hash_function_of_scheme(Signature_Method scheme);
-std::string signature_algorithm_of_scheme(Signature_Method scheme);
+std::string BOTAN_UNSTABLE_API sig_scheme_to_string(Signature_Scheme scheme);
+std::string hash_function_of_scheme(Signature_Scheme scheme);
+std::string signature_algorithm_of_scheme(Signature_Scheme scheme);
 
 enum class Kex_Algo {
    STATIC_RSA,
