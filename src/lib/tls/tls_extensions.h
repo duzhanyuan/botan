@@ -307,12 +307,6 @@ class Signature_Algorithms final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      static std::string hash_algo_name(uint8_t code);
-      static uint8_t hash_algo_code(const std::string& name);
-
-      static std::string sig_algo_name(uint8_t code);
-      static uint8_t sig_algo_code(const std::string& name);
-
       const std::vector<Signature_Scheme>& supported_schemes() const { return m_schemes; }
 
       std::vector<uint8_t> serialize() const override;
