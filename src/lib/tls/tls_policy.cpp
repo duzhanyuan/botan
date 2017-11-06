@@ -21,14 +21,18 @@ namespace TLS {
 
 std::vector<Signature_Method> Policy::allowed_signature_schemes() const
    {
-   return std::vector<Signature_Method>{
-      Signature_Method::ECDSA_SHA512,
-      Signature_Method::ECDSA_SHA384,
-      Signature_Method::ECDSA_SHA256,
-      Signature_Method::RSA_PKCS1_SHA512,
-      Signature_Method::RSA_PKCS1_SHA384,
-      Signature_Method::RSA_PKCS1_SHA256,
-      };
+   std::vector<Signature_Method> schemes;
+
+   for(Signature_Method scheme : all_signature_schemes())
+      {
+      if(allowed_signature_method(signature_algorithm_of_scheme(scheme)) &&
+         allowed_signature_hash(hash_function_of_scheme(scheme)))
+         {
+         schemes.push_back(scheme);
+         }
+      }
+
+   return schemes;
    }
 
 std::vector<std::string> Policy::allowed_ciphers() const

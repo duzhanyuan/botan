@@ -319,9 +319,6 @@ class Signature_Algorithms final : public Extension
 
       bool empty() const override { return false; }
 
-      Signature_Algorithms(const std::vector<std::string>& hashes,
-                           const std::vector<std::string>& sig_algos);
-
       explicit Signature_Algorithms(const std::vector<Signature_Method>& schemes) :
          m_schemes(schemes) {}
 

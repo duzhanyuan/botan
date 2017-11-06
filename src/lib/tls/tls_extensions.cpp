@@ -549,16 +549,6 @@ uint8_t Signature_Algorithms::sig_algo_code(const std::string& name)
    throw Internal_Error("Unknown sig ID " + name + " for signature_algorithms");
    }
 
-Signature_Algorithms::Signature_Algorithms(const std::vector<std::string>& hashes,
-                                           const std::vector<std::string>& sigs)
-   {
-   for(size_t i = 0; i != hashes.size(); ++i)
-      for(size_t j = 0; j != sigs.size(); ++j)
-         {
-         //m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
-         }
-   }
-
 std::vector<uint8_t> Signature_Algorithms::serialize() const
    {
    std::vector<uint8_t> buf;
@@ -584,13 +574,14 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
    {
    uint16_t len = reader.get_uint16_t();
 
-   if(len + 2 != extension_size)
+   if(len % 2 != 0 || (len + 2 != extension_size))
       throw Decoding_Error("Bad encoding on signature algorithms extension");
 
    while(len)
       {
       const uint16_t scheme_code = reader.get_uint16_t();
       m_schemes.push_back(static_cast<Signature_Method>(scheme_code));
+      len -= 2;
       }
    }
 

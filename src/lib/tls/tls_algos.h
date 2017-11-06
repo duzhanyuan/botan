@@ -45,8 +45,8 @@ enum class Cipher_Algo {
    ARIA_128_GCM = 500,
    ARIA_256_GCM,
 
-   SEED_CBC_HMAC_SHA1 = 1000,
-   DES_EDE_CBC_HMAC_SHA1,
+   DES_EDE_CBC_HMAC_SHA1 = 1000,
+   SEED_CBC_HMAC_SHA1,
 };
 
 enum class KDF_Algo {
@@ -104,6 +104,8 @@ enum class Signature_Method : uint16_t {
    EDDSA_25519 = 0x0807,
    EDDSA_448   = 0x0808,
 };
+
+const std::vector<Signature_Method>& all_signature_schemes();
 
 std::string BOTAN_UNSTABLE_API sig_scheme_to_string(Signature_Method scheme);
 std::string hash_function_of_scheme(Signature_Method scheme);

@@ -148,6 +148,31 @@ std::string hash_function_of_scheme(Signature_Method scheme)
    throw Invalid_State("Unknown signature algorithm enum");
    }
 
+const std::vector<Signature_Method>& all_signature_schemes()
+   {
+   static const std::vector<Signature_Method> all_schemes = {
+      Signature_Method::RSA_PKCS1_SHA1,
+      Signature_Method::RSA_PKCS1_SHA256,
+      Signature_Method::RSA_PKCS1_SHA384,
+      Signature_Method::RSA_PKCS1_SHA512,
+      Signature_Method::DSA_SHA1,
+      Signature_Method::DSA_SHA256,
+      Signature_Method::DSA_SHA384,
+      Signature_Method::DSA_SHA512,
+      Signature_Method::ECDSA_SHA1,
+      Signature_Method::ECDSA_SHA256,
+      Signature_Method::ECDSA_SHA384,
+      Signature_Method::ECDSA_SHA512,
+      Signature_Method::RSA_PSS_SHA256,
+      Signature_Method::RSA_PSS_SHA384,
+      Signature_Method::RSA_PSS_SHA512,
+      Signature_Method::EDDSA_25519,
+      Signature_Method::EDDSA_448,
+   };
+
+   return all_schemes;
+   }
+
 std::string signature_algorithm_of_scheme(Signature_Method scheme)
    {
    switch(scheme)
