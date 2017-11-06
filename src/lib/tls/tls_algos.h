@@ -113,6 +113,32 @@ std::string BOTAN_UNSTABLE_API sig_scheme_to_string(Signature_Scheme scheme);
 std::string hash_function_of_scheme(Signature_Scheme scheme);
 std::string signature_algorithm_of_scheme(Signature_Scheme scheme);
 
+/*
+* Matches with wire encoding
+*/
+enum class Group_Params : uint16_t {
+   SECP256R1 = 23,
+   SECP384R1 = 24,
+   SECP521R1 = 25,
+   BRAINPOOL256R1 = 26,
+   BRAINPOOL384R1 = 27,
+   BRAINPOOL512R1 = 28,
+
+   X25519 = 29,
+
+   FFDHE_2048 = 256,
+   FFDHE_3072 = 257,
+   FFDHE_4096 = 258,
+   FFDHE_6144 = 259,
+   FFDHE_8192 = 260,
+
+#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
+   HOUSE_CURVE = BOTAN_HOUSE_ECC_CURVE_TLS_ID,
+#endif
+};
+
+std::string group_param_to_string(Group_Params group);
+
 enum class Kex_Algo {
    STATIC_RSA,
    DH,

@@ -431,7 +431,7 @@ Supported_Groups::Supported_Groups(TLS_Data_Reader& reader,
             {
             m_dh_groups.push_back(name);
             }
-            else
+         else
             {
             m_curves.push_back(name);
             }

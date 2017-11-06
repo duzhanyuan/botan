@@ -113,6 +113,47 @@ Auth_Method auth_method_from_string(const std::string& str)
    throw Invalid_Argument("Bad signature method " + str);
    }
 
+std::string group_param_to_string(Group_Params group)
+   {
+   switch(group)
+      {
+      case Group_Params::SECP256R1:
+         return "secp256r1";
+      case Group_Params::SECP384R1:
+         return "secp384r1";
+      case Group_Params::SECP521R1:
+         return "secp521r1";
+      case Group_Params::BRAINPOOL256R1:
+         return "brainpool256r1";
+      case Group_Params::BRAINPOOL384R1:
+         return "brainpool384r1";
+      case Group_Params::BRAINPOOL512R1:
+         return "brainpool512r1";
+      case Group_Params::X25519:
+         return "x25519";
+
+      case Group_Params::FFDHE_2048:
+         return "ffdhe/ietf/2048";
+      case Group_Params::FFDHE_3072:
+         return "ffdhe/ietf/3072";
+      case Group_Params::FFDHE_4096:
+         return "ffdhe/ietf/4096";
+      case Group_Params::FFDHE_6144:
+         return "ffdhe/ietf/6144";
+      case Group_Params::FFDHE_8192:
+         return "ffdhe/ietf/8192";
+
+#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
+      case BOTAN_HOUSE_ECC_CURVE_TLS_ID:
+         return BOTAN_HOUSE_ECC_CURVE_NAME;
+#endif
+
+      default:
+         return "";
+      }
+   }
+
+
 std::string hash_function_of_scheme(Signature_Scheme scheme)
    {
    switch(scheme)
