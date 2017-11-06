@@ -10,8 +10,9 @@
 #ifndef BOTAN_TLS_EXTENSIONS_H_
 #define BOTAN_TLS_EXTENSIONS_H_
 
+#include <botan/tls_algos.h>
 #include <botan/secmem.h>
-#include <botan/ocsp.h>
+#include <botan/x509_dn.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -312,12 +313,7 @@ class Signature_Algorithms final : public Extension
       static std::string sig_algo_name(uint8_t code);
       static uint8_t sig_algo_code(const std::string& name);
 
-      // [(hash,sig),(hash,sig),...]
-      const std::vector<std::pair<std::string, std::string>>&
-      supported_signature_algorthms() const
-         {
-         return m_supported_algos;
-         }
+      const std::vector<Signature_Method>& supported_schemes() const { return m_schemes; }
 
       std::vector<uint8_t> serialize() const override;
 
@@ -326,13 +322,13 @@ class Signature_Algorithms final : public Extension
       Signature_Algorithms(const std::vector<std::string>& hashes,
                            const std::vector<std::string>& sig_algos);
 
-      explicit Signature_Algorithms(const std::vector<std::pair<std::string, std::string>>& algos) :
-         m_supported_algos(algos) {}
+      explicit Signature_Algorithms(const std::vector<Signature_Method>& schemes) :
+         m_schemes(schemes) {}
 
       Signature_Algorithms(TLS_Data_Reader& reader,
                            uint16_t extension_size);
    private:
-      std::vector<std::pair<std::string, std::string>> m_supported_algos;
+      std::vector<Signature_Method> m_schemes;
    };
 
 /**

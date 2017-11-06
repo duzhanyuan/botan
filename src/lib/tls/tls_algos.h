@@ -107,6 +107,8 @@ enum class Signature_Method : uint16_t {
    EDDSA_448   = 0x0808,
 };
 
+std::string sig_scheme_to_string(Signature_Method method);
+
 enum class Kex_Algo {
    STATIC_RSA,
    DH,

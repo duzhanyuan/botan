@@ -374,7 +374,7 @@ KDF* Handshake_State::protocol_specific_prf() const
 namespace {
 
 std::string choose_hash(const std::string& sig_algo,
-                        std::vector<std::pair<std::string, std::string>>& supported_algos,
+                        const std::vector<Signature_Method>& client_schemes,
                         Protocol_Version negotiated_version,
                         const Policy& policy)
    {
@@ -392,14 +392,16 @@ std::string choose_hash(const std::string& sig_algo,
       throw Internal_Error("Unknown TLS signature algo " + sig_algo);
       }
 
-   if(!supported_algos.empty())
+   if(client_schemes.size() > 0)
       {
-      const std::vector<std::string> hashes = policy.allowed_signature_hashes();
-
       /*
       * Choose our most preferred hash that the counterparty supports
       * in pairing with the signature algorithm we want to use.
       */
+      const std::vector<Signature_Method> schemes = policy.allowed_signature_schemes();
+
+      for(Signature_Method schemes : policy.allowed_signature_schemes())
+
       for(std::string hash : hashes)
          {
          for(auto algo : supported_algos)
@@ -425,11 +427,11 @@ Handshake_State::choose_sig_format(const Private_Key& key,
    {
    const std::string sig_algo = key.algo_name();
 
-   std::vector<std::pair<std::string, std::string>> supported_algos =
-      (for_client_auth) ? cert_req()->supported_algos() : client_hello()->supported_algos();
+   std::vector<Signature_Method> schemes =
+      (for_client_auth) ? cert_req()->signature_schemes() : client_hello()->signature_schemes();
 
    const std::string hash_algo = choose_hash(sig_algo,
-                                             supported_algos,
+                                             schemes,
                                              this->version(),
                                              policy);
 

@@ -181,8 +181,6 @@ uint16_t choose_ciphersuite(
    if(!our_choice)
       std::swap(pref_list, other_list);
 
-   const std::set<std::string> client_sig_algos = client_hello.supported_sig_algos();
-
    for(auto suite_id : pref_list)
       {
       if(!value_exists(other_list, suite_id))
@@ -217,29 +215,30 @@ uint16_t choose_ciphersuite(
             continue;
             }
 
-         // Client request
-         if(!client_sig_algos.empty() && client_sig_algos.count(sig_algo) == 0)
-            {
-            continue;
-            }
-
          if(version.supports_negotiable_signature_algorithms())
             {
-            const std::vector<std::pair<std::string, std::string>> client_sig_hash_pairs =
-               client_hello.supported_algos();
+            const std::vector<Signature_Method> client_sig_methods =
+               client_hello.signature_schemes();
 
-            if(client_hello.supported_algos().empty() == false)
+            if(client_sig_methods.empty())
                {
-               bool we_support_some_hash_by_client = false;
+               // If empty, then implicit SHA-1 (TLS v1.2 rules). Check policy.
 
-               for(auto&& hash_and_sig : client_hello.supported_algos())
+               if(policy.allowed_signature_hash("SHA-1") == false)
+                  throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                                      "Client did not send signature_algorithms extension "
+                                      "and policy prohibits SHA-1 fallback");
+               }
+            else
+               {
+               // Otherwise verify there is some hash we can use...
+
+               bool we_support_some_hash_by_client = true;
+
+               for(Signature_Method scheme : client_sig_methods)
                   {
-                  if(hash_and_sig.second == sig_algo &&
-                     policy.allowed_signature_hash(hash_and_sig.first))
-                     {
-                     we_support_some_hash_by_client = true;
-                     break;
-                     }
+               // FIXME!
+
                   }
 
                if(we_support_some_hash_by_client == false)
@@ -247,13 +246,6 @@ uint16_t choose_ciphersuite(
                   throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                       "Policy does not accept any hash function supported by client");
                   }
-               }
-            else
-               {
-               if(policy.allowed_signature_hash("SHA-1") == false)
-                  throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                                      "Client did not send signature_algorithms extension "
-                                      "and policy prohibits SHA-1 fallback");
                }
             }
          }

@@ -113,6 +113,54 @@ Auth_Method auth_method_from_string(const std::string& str)
    throw Invalid_Argument("Bad signature method " + str);
    }
 
+std::string sig_scheme_to_string(Signature_Method method)
+   {
+   switch(method)
+      {
+      case Signature_Method::RSA_PKCS1_SHA1:
+         return "RSA_PKCS1_SHA1";
+      case Signature_Method::RSA_PKCS1_SHA256:
+         return "RSA_PKCS1_SHA256";
+      case Signature_Method::RSA_PKCS1_SHA384:
+         return "RSA_PKCS1_SHA384";
+      case Signature_Method::RSA_PKCS1_SHA512:
+         return "RSA_PKCS1_SHA512";
+
+      case Signature_Method::DSA_SHA1:
+         return "DSA_SHA1";
+      case Signature_Method::DSA_SHA256:
+         return "DSA_SHA256";
+      case Signature_Method::DSA_SHA384:
+         return "DSA_SHA384";
+      case Signature_Method::DSA_SHA512:
+         return "DSA_SHA512";
+
+      case Signature_Method::ECDSA_SHA1:
+         return "ECDSA_SHA1";
+      case Signature_Method::ECDSA_SHA256:
+         return "ECDSA_SHA256";
+      case Signature_Method::ECDSA_SHA384:
+         return "ECDSA_SHA384";
+      case Signature_Method::ECDSA_SHA512:
+         return "ECDSA_SHA512";
+
+      case Signature_Method::RSA_PSS_SHA256:
+         return "RSA_PSS_SHA256";
+      case Signature_Method::RSA_PSS_SHA384:
+         return "RSA_PSS_SHA384";
+      case Signature_Method::RSA_PSS_SHA512:
+         return "RSA_PSS_SHA512";
+
+      case Signature_Method::EDDSA_25519:
+         return "EDDSA_25519";
+      case Signature_Method::EDDSA_448  :
+         return "EDDSA_448";
+
+      default:
+         return "UNKNOWN";
+      }
+   }
+
 }
 
 }

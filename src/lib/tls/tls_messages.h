@@ -16,6 +16,7 @@
 #include <botan/tls_ciphersuite.h>
 #include <botan/pk_keys.h>
 #include <botan/x509cert.h>
+#include <botan/ocsp.h>
 #include <vector>
 #include <string>
 #include <set>
@@ -104,9 +105,7 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
 
       bool sent_fallback_scsv() const;
 
-      std::vector<std::pair<std::string, std::string>> supported_algos() const;
-
-      std::set<std::string> supported_sig_algos() const;
+      std::vector<Signature_Method> signature_schemes() const;
 
       std::vector<std::string> supported_ecc_curves() const;
 
@@ -409,10 +408,12 @@ class BOTAN_UNSTABLE_API Certificate_Req final : public Handshake_Message
       const std::vector<std::string>& acceptable_cert_types() const
          { return m_cert_key_types; }
 
-      std::vector<X509_DN> acceptable_CAs() const { return m_names; }
+      const std::vector<X509_DN>& acceptable_CAs() const { return m_names; }
 
-      std::vector<std::pair<std::string, std::string> > supported_algos() const
-         { return m_supported_algos; }
+      const std::vector<Signature_Method>& signature_schemes() const
+         {
+         return m_schemes;
+         }
 
       Certificate_Req(Handshake_IO& io,
                       Handshake_Hash& hash,
@@ -428,7 +429,7 @@ class BOTAN_UNSTABLE_API Certificate_Req final : public Handshake_Message
       std::vector<X509_DN> m_names;
       std::vector<std::string> m_cert_key_types;
 
-      std::vector<std::pair<std::string, std::string> > m_supported_algos;
+      std::vector<Signature_Method> m_schemes;
    };
 
 /**
