@@ -113,9 +113,79 @@ Auth_Method auth_method_from_string(const std::string& str)
    throw Invalid_Argument("Bad signature method " + str);
    }
 
-std::string sig_scheme_to_string(Signature_Method method)
+std::string hash_function_of_scheme(Signature_Method scheme)
    {
-   switch(method)
+   switch(scheme)
+      {
+      case Signature_Method::DSA_SHA1:
+      case Signature_Method::ECDSA_SHA1:
+      case Signature_Method::RSA_PKCS1_SHA1:
+         return "SHA-1";
+
+      case Signature_Method::DSA_SHA256:
+      case Signature_Method::ECDSA_SHA256:
+      case Signature_Method::RSA_PKCS1_SHA256:
+      case Signature_Method::RSA_PSS_SHA256:
+         return "SHA-256";
+
+      case Signature_Method::DSA_SHA384:
+      case Signature_Method::ECDSA_SHA384:
+      case Signature_Method::RSA_PKCS1_SHA384:
+      case Signature_Method::RSA_PSS_SHA384:
+         return "SHA-384";
+
+      case Signature_Method::DSA_SHA512:
+      case Signature_Method::ECDSA_SHA512:
+      case Signature_Method::RSA_PKCS1_SHA512:
+      case Signature_Method::RSA_PSS_SHA512:
+         return "SHA-512";
+
+      case Signature_Method::EDDSA_25519:
+      case Signature_Method::EDDSA_448:
+         return "Pure";
+      }
+
+   throw Invalid_State("Unknown signature algorithm enum");
+   }
+
+std::string signature_algorithm_of_scheme(Signature_Method scheme)
+   {
+   switch(scheme)
+      {
+      case Signature_Method::RSA_PKCS1_SHA1:
+      case Signature_Method::RSA_PKCS1_SHA256:
+      case Signature_Method::RSA_PKCS1_SHA384:
+      case Signature_Method::RSA_PKCS1_SHA512:
+      case Signature_Method::RSA_PSS_SHA256:
+      case Signature_Method::RSA_PSS_SHA384:
+      case Signature_Method::RSA_PSS_SHA512:
+         return "RSA";
+
+      case Signature_Method::DSA_SHA1:
+      case Signature_Method::DSA_SHA256:
+      case Signature_Method::DSA_SHA384:
+      case Signature_Method::DSA_SHA512:
+         return "DSA";
+
+      case Signature_Method::ECDSA_SHA1:
+      case Signature_Method::ECDSA_SHA256:
+      case Signature_Method::ECDSA_SHA384:
+      case Signature_Method::ECDSA_SHA512:
+         return "ECDSA";
+
+      case Signature_Method::EDDSA_25519:
+         return "Ed25519";
+
+      case Signature_Method::EDDSA_448:
+         return "Ed448";
+      }
+
+   throw Invalid_State("Unknown signature algorithm enum");
+   }
+
+std::string sig_scheme_to_string(Signature_Method scheme)
+   {
+   switch(scheme)
       {
       case Signature_Method::RSA_PKCS1_SHA1:
          return "RSA_PKCS1_SHA1";
@@ -153,12 +223,11 @@ std::string sig_scheme_to_string(Signature_Method method)
 
       case Signature_Method::EDDSA_25519:
          return "EDDSA_25519";
-      case Signature_Method::EDDSA_448  :
+      case Signature_Method::EDDSA_448:
          return "EDDSA_448";
-
-      default:
-         return "UNKNOWN";
       }
+
+   throw Invalid_State("Unknown signature algorithm enum");
    }
 
 }

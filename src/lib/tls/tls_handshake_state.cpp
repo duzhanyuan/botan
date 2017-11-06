@@ -398,16 +398,16 @@ std::string choose_hash(const std::string& sig_algo,
       * Choose our most preferred hash that the counterparty supports
       * in pairing with the signature algorithm we want to use.
       */
-      const std::vector<Signature_Method> schemes = policy.allowed_signature_schemes();
+      std::vector<Signature_Method> allowed = policy.allowed_signature_schemes();
 
-      for(Signature_Method schemes : policy.allowed_signature_schemes())
-
-      for(std::string hash : hashes)
+      for(Signature_Method scheme : client_schemes)
          {
-         for(auto algo : supported_algos)
+         if(signature_algorithm_of_scheme(scheme) == sig_algo)
             {
-            if(algo.first == hash && algo.second == sig_algo)
-               return hash;
+            if(std::find(allowed.begin(), allowed.end(), scheme) != allowed.end())
+               {
+               return hash_function_of_scheme(scheme);
+               }
             }
          }
       }
@@ -468,13 +468,14 @@ Handshake_State::choose_sig_format(const Private_Key& key,
 namespace {
 
 bool supported_algos_include(
-   const std::vector<std::pair<std::string, std::string>>& algos,
+   const std::vector<Signature_Method>& schemes,
    const std::string& key_type,
    const std::string& hash_type)
    {
-   for(auto&& algo : algos)
+   for(Signature_Method scheme : schemes)
       {
-      if(algo.first == hash_type && algo.second == key_type)
+      if(hash_function_of_scheme(scheme) == hash_type &&
+         signature_algorithm_of_scheme(scheme) == key_type)
          {
          return true;
          }
@@ -523,9 +524,9 @@ Handshake_State::parse_sig_format(const Public_Key& key,
       supported_algos list that we sent; it better be there.
       */
 
-      const auto supported_algos =
-         for_client_auth ? cert_req()->supported_algos() :
-                           client_hello()->supported_algos();
+      const std::vector<Signature_Method> supported_algos =
+         for_client_auth ? cert_req()->signature_schemes() :
+                           client_hello()->signature_schemes();
 
       if(!supported_algos_include(supported_algos, key_type, hash_algo))
          {

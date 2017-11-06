@@ -217,35 +217,35 @@ uint16_t choose_ciphersuite(
 
          if(version.supports_negotiable_signature_algorithms())
             {
-            const std::vector<Signature_Method> client_sig_methods =
+            const std::vector<Signature_Method> allowed =
+               policy.allowed_signature_schemes();
+
+            std::vector<Signature_Method> client_sig_methods =
                client_hello.signature_schemes();
 
             if(client_sig_methods.empty())
                {
-               // If empty, then implicit SHA-1 (TLS v1.2 rules). Check policy.
-
-               if(policy.allowed_signature_hash("SHA-1") == false)
-                  throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                                      "Client did not send signature_algorithms extension "
-                                      "and policy prohibits SHA-1 fallback");
+               // If empty, then implicit SHA-1 (TLS v1.2 rules)
+               client_sig_methods.push_back(Signature_Method::RSA_PKCS1_SHA1);
+               client_sig_methods.push_back(Signature_Method::ECDSA_SHA1);
+               client_sig_methods.push_back(Signature_Method::DSA_SHA1);
                }
-            else
+
+            bool we_support_some_hash_by_client = true;
+
+            for(Signature_Method scheme : client_sig_methods)
                {
-               // Otherwise verify there is some hash we can use...
-
-               bool we_support_some_hash_by_client = true;
-
-               for(Signature_Method scheme : client_sig_methods)
+               if(signature_algorithm_of_scheme(scheme) == suite.sig_algo() &&
+                  policy.allowed_signature_hash(hash_function_of_scheme(scheme)))
                   {
-               // FIXME!
-
+                  we_support_some_hash_by_client = true;
                   }
+               }
 
-               if(we_support_some_hash_by_client == false)
-                  {
-                  throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                                      "Policy does not accept any hash function supported by client");
-                  }
+            if(we_support_some_hash_by_client == false)
+               {
+               throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                                   "Policy does not accept any hash function supported by client");
                }
             }
          }
