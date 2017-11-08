@@ -111,6 +111,7 @@ const std::vector<Signature_Scheme>& all_signature_schemes();
 
 std::string BOTAN_UNSTABLE_API sig_scheme_to_string(Signature_Scheme scheme);
 std::string hash_function_of_scheme(Signature_Scheme scheme);
+std::string padding_string_for_scheme(Signature_Scheme scheme);
 std::string signature_algorithm_of_scheme(Signature_Scheme scheme);
 
 /*

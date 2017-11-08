@@ -305,6 +305,51 @@ std::string sig_scheme_to_string(Signature_Scheme scheme)
    throw Invalid_State("Unknown signature algorithm enum");
    }
 
+std::string padding_string_for_scheme(Signature_Scheme scheme)
+   {
+   switch(scheme)
+      {
+      case Signature_Scheme::RSA_PKCS1_SHA1:
+         return "EMSA_PKCS1(SHA-1)";
+      case Signature_Scheme::RSA_PKCS1_SHA256:
+         return "EMSA_PKCS1(SHA-256)";
+      case Signature_Scheme::RSA_PKCS1_SHA384:
+         return "EMSA_PKCS1(SHA-384)";
+      case Signature_Scheme::RSA_PKCS1_SHA512:
+         return "EMSA_PKCS1(SHA-512)";
+
+      case Signature_Scheme::DSA_SHA1:
+      case Signature_Scheme::ECDSA_SHA1:
+         return "EMSA1(SHA-1)";
+      case Signature_Scheme::DSA_SHA256:
+      case Signature_Scheme::ECDSA_SHA256:
+         return "EMSA1(SHA-256)";
+      case Signature_Scheme::DSA_SHA384:
+      case Signature_Scheme::ECDSA_SHA384:
+         return "EMSA1(SHA-384)";
+      case Signature_Scheme::DSA_SHA512:
+      case Signature_Scheme::ECDSA_SHA512:
+         return "EMSA1(SHA-512)";
+
+      case Signature_Scheme::RSA_PSS_SHA256:
+         return "PSSR(SHA-256,MGF1,32)";
+      case Signature_Scheme::RSA_PSS_SHA384:
+         return "PSSR(SHA-384,MGF1,48)";
+      case Signature_Scheme::RSA_PSS_SHA512:
+         return "PSSR(SHA-512,MGF1,64)";
+
+      case Signature_Scheme::EDDSA_25519:
+         return "Pure";
+      case Signature_Scheme::EDDSA_448:
+         return "Pure";
+
+      case Signature_Scheme::NONE:
+         return "";
+      }
+
+   throw Invalid_State("Unknown signature algorithm enum");
+   }
+
 }
 
 }
