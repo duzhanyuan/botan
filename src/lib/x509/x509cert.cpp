@@ -85,15 +85,13 @@ X509_Certificate::X509_Certificate(const std::string& fsname) :
    }
 #endif
 
-/*
-* Decode the TBSCertificate data
-*/
-void X509_Certificate::force_decode()
+namespace {
+
+std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& obj)
    {
    std::unique_ptr<X509_Certificate_Data> data(new X509_Certificate_Data);
-   m_data.reset();
 
-   BER_Decoder tbs_cert(signed_body());
+   BER_Decoder tbs_cert(obj.signed_body());
    BigInt serial_bn;
 
    tbs_cert.decode_optional(data->m_version, ASN1_Tag(0),
@@ -109,7 +107,7 @@ void X509_Certificate::force_decode()
 
    if(data->m_version > 2)
       throw Decoding_Error("Unknown X.509 cert version " + std::to_string(data->m_version));
-   if(signature_algorithm() != data->m_sig_algo_inner)
+   if(obj.signature_algorithm() != data->m_sig_algo_inner)
       throw Decoding_Error("X.509 Certificate had differing algorithm identifers in inner and outer ID fields");
 
    // for general sanity convert wire version (0 based) to standards version (v1 .. v3)
@@ -152,7 +150,7 @@ void X509_Certificate::force_decode()
 
             ToDo: Allow salt length to be greater
             */
-            if(public_key_alg_id != signature_algorithm())
+            if(public_key_alg_id != obj.signature_algorithm())
                {
                throw Decoding_Error("Algorithm identifier mismatch");
                }
@@ -237,7 +235,7 @@ void X509_Certificate::force_decode()
       {
       std::unique_ptr<Public_Key> pub_key(
          X509::load_key(ASN1::put_in_sequence(data->m_subject_public_key_bits)));
-      data->m_self_signed = check_signature(*pub_key);
+      data->m_self_signed = obj.check_signature(*pub_key);
       }
 
    std::unique_ptr<HashFunction> sha1(HashFunction::create("SHA-1"));
@@ -252,9 +250,22 @@ void X509_Certificate::force_decode()
    data->m_issuer_ds.add(data->m_issuer_dn.contents());
    data->m_v3_extensions.contents_to(data->m_subject_ds, data->m_issuer_ds);
 
-   m_data.reset(data.release());
+   return data;
    }
 
+}
+
+/*
+* Decode the TBSCertificate data
+*/
+void X509_Certificate::force_decode()
+   {
+   m_data.reset();
+
+   std::unique_ptr<X509_Certificate_Data> data = parse_x509_cert_body(*this);
+
+   m_data.reset(data.release());
+   }
 
 const X509_Certificate_Data& X509_Certificate::data() const
    {
