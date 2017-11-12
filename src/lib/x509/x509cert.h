@@ -29,9 +29,10 @@ enum class Usage_Type
    OCSP_RESPONDER
    };
 
+struct X509_Certificate_Data;
+
 /**
 * This class represents an X.509 Certificate
-* It implements v3 certificates 
 */
 class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
    {
@@ -43,7 +44,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       *
       * @return public key
       */
-      Public_Key* subject_public_key() const
+      Public_Key* BOTAN_DEPRECATED("Use load_subject_public_key") subject_public_key() const
          {
          return load_subject_public_key().release();
          }
@@ -116,9 +117,9 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       std::vector<std::string> issuer_info(const std::string& name) const;
 
       /**
-      * Raw issuer DN
+      * Raw issuer DN bits
       */
-      std::vector<uint8_t> raw_issuer_dn() const;
+      const std::vector<uint8_t>& raw_issuer_dn() const;
 
       /**
       * SHA-256 of Raw issuer DN
@@ -128,7 +129,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       /**
       * Raw subject DN
       */
-      std::vector<uint8_t> raw_subject_dn() const;
+      const std::vector<uint8_t>& raw_subject_dn() const;
 
       /**
       * SHA-256 of Raw subject DN
@@ -175,19 +176,19 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * Get the serial number of this certificate.
       * @return certificates serial number
       */
-      std::vector<uint8_t> serial_number() const;
+      const std::vector<uint8_t>& serial_number() const;
 
       /**
       * Get the DER encoded AuthorityKeyIdentifier of this certificate.
       * @return DER encoded AuthorityKeyIdentifier
       */
-      std::vector<uint8_t> authority_key_id() const;
+      const std::vector<uint8_t>& authority_key_id() const;
 
       /**
       * Get the DER encoded SubjectKeyIdentifier of this certificate.
       * @return DER encoded SubjectKeyIdentifier
       */
-      std::vector<uint8_t> subject_key_id() const;
+      const std::vector<uint8_t>& subject_key_id() const;
 
       /**
       * Check whether this certificate is self signed.
@@ -388,47 +389,12 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
    private:
       void force_decode() override;
       friend class X509_CA;
-      friend class BER_Decoder;
 
       X509_Certificate() = default;
 
-      // TODO: pimpl
-      // struct X509_Certificate_Data;
-      //std::shared_ptr<X509_Certificate_Data> m_cert_data;
+      const X509_Certificate_Data& data() const;
 
-      size_t m_version = 0;
-      std::vector<uint8_t> m_serial;
-      AlgorithmIdentifier m_sig_algo_inner;
-      X509_DN m_issuer_dn;
-      X509_DN m_subject_dn;
-      std::vector<uint8_t> m_issuer_dn_bits;
-      std::vector<uint8_t> m_subject_dn_bits;
-      X509_Time m_not_before;
-      X509_Time m_not_after;
-      std::vector<uint8_t> m_subject_public_key_bits;
-      AlgorithmIdentifier m_subject_public_key_algid;
-      std::vector<uint8_t> m_subject_public_key_bitstring;
-      std::vector<uint8_t> m_subject_public_key_bitstring_sha1;
-
-      std::vector<uint8_t> m_v2_issuer_key_id;
-      std::vector<uint8_t> m_v2_subject_key_id;
-
-      Key_Constraints m_key_constraints;
-      std::vector<OID> m_extended_key_usage;
-      std::vector<uint8_t> m_authority_key_id;
-      std::vector<uint8_t> m_subject_key_id;
-
-      std::vector<std::string> m_crl_distribution_points;
-      std::vector<std::string> m_ocsp_responders;
-
-      size_t m_path_len_constraint = 0;
-      bool m_self_signed = false;
-      bool m_is_ca_certificate = false;
-
-      // TODO remove these:
-      Extensions m_v3_extensions;
-      Data_Store m_subject_ds;
-      Data_Store m_issuer_ds;
+      std::shared_ptr<X509_Certificate_Data> m_data;
    };
 
 /**

@@ -20,6 +20,42 @@
 
 namespace Botan {
 
+struct X509_Certificate_Data
+   {
+   size_t m_version = 0;
+   std::vector<uint8_t> m_serial;
+   AlgorithmIdentifier m_sig_algo_inner;
+   X509_DN m_issuer_dn;
+   X509_DN m_subject_dn;
+   std::vector<uint8_t> m_issuer_dn_bits;
+   std::vector<uint8_t> m_subject_dn_bits;
+   X509_Time m_not_before;
+   X509_Time m_not_after;
+   std::vector<uint8_t> m_subject_public_key_bits;
+   AlgorithmIdentifier m_subject_public_key_algid;
+   std::vector<uint8_t> m_subject_public_key_bitstring;
+   std::vector<uint8_t> m_subject_public_key_bitstring_sha1;
+
+   std::vector<uint8_t> m_v2_issuer_key_id;
+   std::vector<uint8_t> m_v2_subject_key_id;
+   Extensions m_v3_extensions;
+
+   Key_Constraints m_key_constraints;
+   std::vector<OID> m_extended_key_usage;
+   std::vector<uint8_t> m_authority_key_id;
+   std::vector<uint8_t> m_subject_key_id;
+
+   std::vector<std::string> m_crl_distribution_points;
+   std::vector<std::string> m_ocsp_responders;
+
+   size_t m_path_len_constraint = 0;
+   bool m_self_signed = false;
+   bool m_is_ca_certificate = false;
+
+   Data_Store m_subject_ds;
+   Data_Store m_issuer_ds;
+   };
+
 /*
 * X509_Certificate Constructor
 */
@@ -54,31 +90,34 @@ X509_Certificate::X509_Certificate(const std::string& fsname) :
 */
 void X509_Certificate::force_decode()
    {
+   std::unique_ptr<X509_Certificate_Data> data(new X509_Certificate_Data);
+   m_data.reset();
+
    BER_Decoder tbs_cert(signed_body());
    BigInt serial_bn;
 
-   tbs_cert.decode_optional(m_version, ASN1_Tag(0),
+   tbs_cert.decode_optional(data->m_version, ASN1_Tag(0),
                             ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
       .decode(serial_bn)
-      .decode(m_sig_algo_inner)
-      .decode(m_issuer_dn)
+      .decode(data->m_sig_algo_inner)
+      .decode(data->m_issuer_dn)
       .start_cons(SEQUENCE)
-         .decode(m_not_before)
-         .decode(m_not_after)
+         .decode(data->m_not_before)
+         .decode(data->m_not_after)
       .end_cons()
-      .decode(m_subject_dn);
+      .decode(data->m_subject_dn);
 
-   if(m_version > 2)
-      throw Decoding_Error("Unknown X.509 cert version " + std::to_string(m_version));
-   if(signature_algorithm() != m_sig_algo_inner)
+   if(data->m_version > 2)
+      throw Decoding_Error("Unknown X.509 cert version " + std::to_string(data->m_version));
+   if(signature_algorithm() != data->m_sig_algo_inner)
       throw Decoding_Error("X.509 Certificate had differing algorithm identifers in inner and outer ID fields");
 
    // for general sanity convert wire version (0 based) to standards version (v1 .. v3)
-   m_version += 1;
+   data->m_version += 1;
 
-   m_serial = BigInt::encode(serial_bn);
-   m_subject_dn_bits = ASN1::put_in_sequence(m_subject_dn.get_bits());
-   m_issuer_dn_bits = ASN1::put_in_sequence(m_issuer_dn.get_bits());
+   data->m_serial = BigInt::encode(serial_bn);
+   data->m_subject_dn_bits = ASN1::put_in_sequence(data->m_subject_dn.get_bits());
+   data->m_issuer_dn_bits = ASN1::put_in_sequence(data->m_issuer_dn.get_bits());
 
    BER_Object public_key = tbs_cert.get_next_object();
    if(public_key.type_tag != SEQUENCE || public_key.class_tag != CONSTRUCTED)
@@ -133,20 +172,20 @@ void X509_Certificate::force_decode()
          }
       }
 
-   m_subject_public_key_bits = unlock(public_key.value);
+   data->m_subject_public_key_bits = unlock(public_key.value);
 
-   BER_Decoder(m_subject_public_key_bits)
-      .decode(m_subject_public_key_algid)
-      .decode(m_subject_public_key_bitstring, BIT_STRING);
+   BER_Decoder(data->m_subject_public_key_bits)
+      .decode(data->m_subject_public_key_algid)
+      .decode(data->m_subject_public_key_bitstring, BIT_STRING);
 
-   tbs_cert.decode_optional_string(m_v2_issuer_key_id, BIT_STRING, 1);
-   tbs_cert.decode_optional_string(m_v2_subject_key_id, BIT_STRING, 2);
+   tbs_cert.decode_optional_string(data->m_v2_issuer_key_id, BIT_STRING, 1);
+   tbs_cert.decode_optional_string(data->m_v2_subject_key_id, BIT_STRING, 2);
 
    BER_Object v3_exts_data = tbs_cert.get_next_object();
    if(v3_exts_data.type_tag == 3 &&
       v3_exts_data.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
       {
-      BER_Decoder(v3_exts_data.value).decode(m_v3_extensions).verify_end();
+      BER_Decoder(v3_exts_data.value).decode(data->m_v3_extensions).verify_end();
       }
    else if(v3_exts_data.type_tag != NO_OBJECT)
       throw BER_Bad_Tag("Unknown tag in X.509 cert",
@@ -156,179 +195,204 @@ void X509_Certificate::force_decode()
       throw Decoding_Error("TBSCertificate has extra data after extensions block");
 
    // Now cache some fields from the extensions
-   if(auto ext = v3_extensions().get_extension_object_as<Cert_Extension::Key_Usage>())
+   if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Key_Usage>())
       {
-      m_key_constraints = ext->get_constraints();
+      data->m_key_constraints = ext->get_constraints();
       }
    else
       {
-      m_key_constraints = NO_CONSTRAINTS;
+      data->m_key_constraints = NO_CONSTRAINTS;
       }
 
-   if(auto ext = v3_extensions().get_extension_object_as<Cert_Extension::Subject_Key_ID>())
+   if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Subject_Key_ID>())
       {
-      m_subject_key_id = ext->get_key_id();
+      data->m_subject_key_id = ext->get_key_id();
       }
 
-   if(auto ext = v3_extensions().get_extension_object_as<Cert_Extension::Authority_Key_ID>())
+   if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Authority_Key_ID>())
       {
-      m_authority_key_id = ext->get_key_id();
+      data->m_authority_key_id = ext->get_key_id();
       }
 
-   if(auto ext = v3_extensions().get_extension_object_as<Cert_Extension::Basic_Constraints>())
+   if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Basic_Constraints>())
       {
       if(ext->get_is_ca() == true)
          {
-         m_is_ca_certificate = allowed_usage(KEY_CERT_SIGN);
-
-         if(m_is_ca_certificate)
+         if(data->m_key_constraints == NO_CONSTRAINTS ||
+            (data->m_key_constraints & KEY_CERT_SIGN))
             {
-            m_path_len_constraint = ext->get_path_limit();
+            data->m_is_ca_certificate = true;
+            data->m_path_len_constraint = ext->get_path_limit();
             }
          }
       }
 
-   if(auto ext = v3_extensions().get_extension_object_as<Cert_Extension::Extended_Key_Usage>())
+   if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Extended_Key_Usage>())
       {
-      m_extended_key_usage = ext->get_oids();
+      data->m_extended_key_usage = ext->get_oids();
       }
 
    // Check for self-signed vs self-issued certificates
-   if(m_subject_dn == m_issuer_dn)
+   if(data->m_subject_dn == data->m_issuer_dn)
       {
-      std::unique_ptr<Public_Key> pub_key(subject_public_key());
-      m_self_signed = check_signature(*pub_key);
+      std::unique_ptr<Public_Key> pub_key(
+         X509::load_key(ASN1::put_in_sequence(data->m_subject_public_key_bits)));
+      data->m_self_signed = check_signature(*pub_key);
       }
 
    std::unique_ptr<HashFunction> sha1(HashFunction::create("SHA-1"));
    if(sha1)
       {
-      sha1->update(m_subject_public_key_bitstring);
-      m_subject_public_key_bitstring_sha1 = sha1->final_stdvec();
+      sha1->update(data->m_subject_public_key_bitstring);
+      data->m_subject_public_key_bitstring_sha1 = sha1->final_stdvec();
       // otherwise left as empty, and we will throw if subject_public_key_bitstring_sha1 is called
       }
 
-   m_subject_ds.add(m_subject_dn.contents());
-   m_issuer_ds.add(m_issuer_dn.contents());
-   v3_extensions().contents_to(m_subject_ds, m_issuer_ds);
+   data->m_subject_ds.add(data->m_subject_dn.contents());
+   data->m_issuer_ds.add(data->m_issuer_dn.contents());
+   data->m_v3_extensions.contents_to(data->m_subject_ds, data->m_issuer_ds);
+
+   m_data.reset(data.release());
    }
 
-/*
-* Return the X.509 version in use
-*/
+
+const X509_Certificate_Data& X509_Certificate::data() const
+   {
+   if(m_data == nullptr)
+      {
+      abort();
+      throw Decoding_Error("Failed to parse X509 certificate");
+      }
+   return *m_data.get();
+   }
+
 uint32_t X509_Certificate::x509_version() const
    {
-   return m_version;
+   return data().m_version;
    }
 
 bool X509_Certificate::is_self_signed() const
    {
-   return m_self_signed;
+   return data().m_self_signed;
    }
 
 const X509_Time& X509_Certificate::not_before() const
    {
-   return m_not_before;
+   return data().m_not_before;
    }
 
 const X509_Time& X509_Certificate::not_after() const
    {
-   return m_not_after;
+   return data().m_not_after;
    }
 
 std::vector<uint8_t> X509_Certificate::v2_issuer_key_id() const
    {
-   return m_v2_issuer_key_id;
+   return data().m_v2_issuer_key_id;
    }
 
 std::vector<uint8_t> X509_Certificate::v2_subject_key_id() const
    {
-   return m_v2_subject_key_id;
-   }
-
-/*
-* Return information about the subject
-*/
-std::vector<std::string>
-X509_Certificate::subject_info(const std::string& what) const
-   {
-   const std::string req = X509_DN::deref_info_field(what);
-   if(req == "X509.Certificate.v2.key_id")
-      return {hex_encode(this->v2_subject_key_id())};
-   if(req == "X509v3.SubjectKeyIdentifier")
-      return {hex_encode(this->subject_key_id())};
-   if(req == "X509.Certificate.dn_bits")
-      return {hex_encode(this->raw_subject_dn())};
-   if(req == "X509.Certificate.start")
-      return {m_not_before.to_string()};
-   if(req == "X509.Certificate.end")
-      return {m_not_after.to_string()};
-
-   if(req == "X509.Certificate.version")
-      return {std::to_string(m_version)};
-   if(req == "X509.Certificate.serial")
-      return {hex_encode(m_serial)};
-   if(req == "X509.Certificate.serial")
-      return {hex_encode(m_serial)};
-
-   return m_subject_ds.get(req);
-   }
-
-/*
-* Return information about the issuer
-*/
-std::vector<std::string>
-X509_Certificate::issuer_info(const std::string& what) const
-   {
-   const std::string req = X509_DN::deref_info_field(what);
-   if(req == "X509.Certificate.v2.key_id")
-      return {hex_encode(this->v2_issuer_key_id())};
-   if(req == "X509v3.AuthorityKeyIdentifier")
-      return {hex_encode(this->authority_key_id())};
-   if(req == "X509.Certificate.dn_bits")
-      return {hex_encode(this->raw_issuer_dn())};
-   if(req == "X509.Certificate.public_key")
-      return {hex_encode(this->subject_key_id())};
-
-   return m_issuer_ds.get(req);
-   }
-
-/*
-* Return the public key in this certificate
-*/
-std::unique_ptr<Public_Key> X509_Certificate::load_subject_public_key() const
-   {
-   try
-      {
-      return std::unique_ptr<Public_Key>(X509::load_key(ASN1::put_in_sequence(this->subject_public_key_bits())));
-      }
-   catch(std::exception& e)
-      {
-      throw Decoding_Error("X509_Certificate::load_subject_public_key", e.what());
-      }
+   return data().m_v2_subject_key_id;
    }
 
 const std::vector<uint8_t>& X509_Certificate::subject_public_key_bits() const
    {
-   return m_subject_public_key_bits;
+   return data().m_subject_public_key_bits;
    }
 
 const std::vector<uint8_t>& X509_Certificate::subject_public_key_bitstring() const
    {
-   return m_subject_public_key_bitstring;
+   return data().m_subject_public_key_bitstring;
    }
 
 std::vector<uint8_t> X509_Certificate::subject_public_key_bitstring_sha1() const
    {
-   if(m_subject_public_key_bitstring_sha1.empty())
-         throw Encoding_Error("X509_Certificate::subject_public_key_bitstring_sha1 called but SHA-1 disabled in build");
+   if(data().m_subject_public_key_bitstring_sha1.empty())
+      throw Encoding_Error("X509_Certificate::subject_public_key_bitstring_sha1 called but SHA-1 disabled in build");
 
-   return m_subject_public_key_bitstring_sha1;
+   return data().m_subject_public_key_bitstring_sha1;
+   }
+
+const std::vector<uint8_t>& X509_Certificate::authority_key_id() const
+   {
+   return data().m_authority_key_id;
+   }
+
+const std::vector<uint8_t>& X509_Certificate::subject_key_id() const
+   {
+   return data().m_subject_key_id;
+   }
+
+const std::vector<uint8_t>& X509_Certificate::serial_number() const
+   {
+   return data().m_serial;
+   }
+
+const X509_DN& X509_Certificate::issuer_dn() const
+   {
+   return data().m_issuer_dn;
+   }
+
+const X509_DN& X509_Certificate::subject_dn() const
+   {
+   return data().m_subject_dn;
+   }
+
+const std::vector<uint8_t>& X509_Certificate::raw_issuer_dn() const
+   {
+   return data().m_issuer_dn_bits;
+   }
+
+const std::vector<uint8_t>& X509_Certificate::raw_subject_dn() const
+   {
+   return data().m_subject_dn_bits;
    }
 
 bool X509_Certificate::is_CA_cert() const
    {
-   return m_is_ca_certificate;
+   return data().m_is_ca_certificate;
+   }
+
+uint32_t X509_Certificate::path_limit() const
+   {
+   return data().m_path_len_constraint;
+   }
+
+Key_Constraints X509_Certificate::constraints() const
+   {
+   return data().m_key_constraints;
+   }
+
+const std::vector<OID>& X509_Certificate::extended_key_usage() const
+   {
+   return data().m_extended_key_usage;
+   }
+
+std::vector<OID> X509_Certificate::certificate_policy_oids() const
+   {
+   if(auto ext = v3_extensions().get_extension_object_as<Cert_Extension::Certificate_Policies>())
+      {
+      return ext->get_policy_oids();
+      }
+   return std::vector<OID>();
+   }
+
+/*
+* Return the name constraints
+*/
+NameConstraints X509_Certificate::name_constraints() const
+   {
+   if(auto ext = v3_extensions().get_extension_object_as<Cert_Extension::Name_Constraints>())
+      {
+      return ext->get_name_constraints();
+      }
+   return NameConstraints(); // no constraints
+   }
+
+const Extensions& X509_Certificate::v3_extensions() const
+   {
+   return data().m_v3_extensions;
    }
 
 bool X509_Certificate::allowed_usage(Key_Constraints usage) const
@@ -402,14 +466,6 @@ bool X509_Certificate::has_ex_constraint(const OID& usage) const
    }
 
 /*
-* Return the path length constraint
-*/
-uint32_t X509_Certificate::path_limit() const
-   {
-   return m_path_len_constraint;
-   }
-
-/*
 * Return if a certificate extension is marked critical
 */
 bool X509_Certificate::is_critical(const std::string& ex_name) const
@@ -417,38 +473,90 @@ bool X509_Certificate::is_critical(const std::string& ex_name) const
    return v3_extensions().critical_extension_set(OIDS::str2oid(ex_name));
    }
 
-/*
-* Return the key usage constraints
-*/
-Key_Constraints X509_Certificate::constraints() const
+std::string X509_Certificate::ocsp_responder() const
    {
-   return m_key_constraints;
+   return "";
+   // TODO!
    }
 
-const std::vector<OID>& X509_Certificate::extended_key_usage() const
+std::string X509_Certificate::crl_distribution_point() const
    {
-   return m_extended_key_usage;
-   }
-
-std::vector<OID> X509_Certificate::certificate_policy_oids() const
-   {
-   if(auto ext = v3_extensions().get_extension_object_as<Cert_Extension::Certificate_Policies>())
-      {
-      return ext->get_policy_oids();
-      }
-   return std::vector<OID>();
+   // TODO!
+   return "";
    }
 
 /*
-* Return the name constraints
+* Return information about the subject
 */
-NameConstraints X509_Certificate::name_constraints() const
+std::vector<std::string>
+X509_Certificate::subject_info(const std::string& what) const
    {
-   if(auto ext = v3_extensions().get_extension_object_as<Cert_Extension::Name_Constraints>())
+   const std::string req = X509_DN::deref_info_field(what);
+   if(req == "X509.Certificate.v2.key_id")
+      return {hex_encode(this->v2_subject_key_id())};
+   if(req == "X509v3.SubjectKeyIdentifier")
+      return {hex_encode(this->subject_key_id())};
+   if(req == "X509.Certificate.dn_bits")
+      return {hex_encode(this->raw_subject_dn())};
+   if(req == "X509.Certificate.start")
+      return {not_before().to_string()};
+   if(req == "X509.Certificate.end")
+      return {not_after().to_string()};
+
+   if(req == "X509.Certificate.version")
+      return {std::to_string(x509_version())};
+   if(req == "X509.Certificate.serial")
+      return {hex_encode(serial_number())};
+
+   return data().m_subject_ds.get(req);
+   }
+
+/*
+* Return information about the issuer
+*/
+std::vector<std::string>
+X509_Certificate::issuer_info(const std::string& what) const
+   {
+   const std::string req = X509_DN::deref_info_field(what);
+   if(req == "X509.Certificate.v2.key_id")
+      return {hex_encode(this->v2_issuer_key_id())};
+   if(req == "X509v3.AuthorityKeyIdentifier")
+      return {hex_encode(this->authority_key_id())};
+   if(req == "X509.Certificate.dn_bits")
+      return {hex_encode(this->raw_issuer_dn())};
+   if(req == "X509.Certificate.public_key")
+      return {hex_encode(this->subject_key_id())};
+
+   return data().m_issuer_ds.get(req);
+   }
+
+/*
+* Return the public key in this certificate
+*/
+std::unique_ptr<Public_Key> X509_Certificate::load_subject_public_key() const
+   {
+   try
       {
-      return ext->get_name_constraints();
+      return std::unique_ptr<Public_Key>(X509::load_key(ASN1::put_in_sequence(this->subject_public_key_bits())));
       }
-   return NameConstraints(); // no constraints
+   catch(std::exception& e)
+      {
+      throw Decoding_Error("X509_Certificate::load_subject_public_key", e.what());
+      }
+   }
+
+std::vector<uint8_t> X509_Certificate::raw_issuer_dn_sha256() const
+   {
+   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw("SHA-256"));
+   hash->update(raw_issuer_dn());
+   return hash->final_stdvec();
+   }
+
+std::vector<uint8_t> X509_Certificate::raw_subject_dn_sha256() const
+   {
+   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-256"));
+   hash->update(raw_subject_dn());
+   return hash->final_stdvec();
    }
 
 namespace {
@@ -485,91 +593,9 @@ std::vector<std::string> X509_Certificate::policies() const
    return lookup_oids(certificate_policy_oids());
    }
 
-const Extensions& X509_Certificate::v3_extensions() const
-   {
-   return m_v3_extensions;
-   }
-
-std::string X509_Certificate::ocsp_responder() const
-   {
-   if(m_ocsp_responders.size() >= 1)
-      {
-      return m_ocsp_responders[0];
-      }
-   return "";
-   }
-
-std::string X509_Certificate::crl_distribution_point() const
-   {
-   if(m_crl_distribution_points.size() >= 1)
-      {
-      return m_crl_distribution_points[0];
-      }
-   return "";
-   }
-
-/*
-* Return the authority key id
-*/
-std::vector<uint8_t> X509_Certificate::authority_key_id() const
-   {
-   return m_authority_key_id;
-   //return m_issuer.get1_memvec("X509v3.AuthorityKeyIdentifier");
-   }
-
-/*
-* Return the subject key id
-*/
-std::vector<uint8_t> X509_Certificate::subject_key_id() const
-   {
-   return m_subject_key_id;
-   }
-
-/*
-* Return the certificate serial number
-*/
-std::vector<uint8_t> X509_Certificate::serial_number() const
-   {
-   return m_serial;
-   }
-
-const X509_DN& X509_Certificate::issuer_dn() const
-   {
-   return m_issuer_dn;
-   }
-
-const X509_DN& X509_Certificate::subject_dn() const
-   {
-   return m_subject_dn;
-   }
-
-std::vector<uint8_t> X509_Certificate::raw_issuer_dn_sha256() const
-   {
-   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-256"));
-   hash->update(raw_issuer_dn());
-   return hash->final_stdvec();
-   }
-
-std::vector<uint8_t> X509_Certificate::raw_issuer_dn() const
-   {
-   return m_issuer_dn_bits;
-   }
-
-std::vector<uint8_t> X509_Certificate::raw_subject_dn() const
-   {
-   return m_subject_dn_bits;
-   }
-
-std::vector<uint8_t> X509_Certificate::raw_subject_dn_sha256() const
-   {
-   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-256"));
-   hash->update(raw_subject_dn());
-   return hash->final_stdvec();
-   }
-
 std::string X509_Certificate::fingerprint(const std::string& hash_name) const
    {
-   std::unique_ptr<HashFunction> hash(HashFunction::create(hash_name));
+   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_name));
    hash->update(this->BER_encode());
    const std::string hex_print = hex_encode(hash->final());
 
