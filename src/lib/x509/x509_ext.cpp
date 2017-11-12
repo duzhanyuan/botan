@@ -140,6 +140,14 @@ bool Extensions::extension_set(const OID& oid) const
    return (m_extension_info.find(oid) != m_extension_info.end());
    }
 
+bool Extensions::critical_extension_set(const OID& oid) const
+   {
+   auto i = m_extension_info.find(oid);
+   if(i != m_extension_info.end())
+      return i->second.is_critical();
+   return false;
+   }
+
 const Certificate_Extension* Extensions::get_extension_object(const OID& oid) const
    {
    auto extn = m_extension_info.find(oid);

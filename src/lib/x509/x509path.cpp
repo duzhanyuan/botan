@@ -67,10 +67,10 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
          }
 
       // Check all certs for valid time range
-      if(validation_time < X509_Time(subject->start_time(), ASN1_Tag::UTC_OR_GENERALIZED_TIME))
+      if(validation_time < subject->not_before())
          status.insert(Certificate_Status_Code::CERT_NOT_YET_VALID);
 
-      if(validation_time > X509_Time(subject->end_time(), ASN1_Tag::UTC_OR_GENERALIZED_TIME))
+      if(validation_time > subject->not_after())
          status.insert(Certificate_Status_Code::CERT_HAS_EXPIRED);
 
       // Check issuer constraints

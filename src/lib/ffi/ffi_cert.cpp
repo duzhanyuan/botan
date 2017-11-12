@@ -100,12 +100,12 @@ int botan_x509_cert_destroy(botan_x509_cert_t cert)
 
 int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* out_len)
    {
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.start_time()); });
+   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.not_before().to_string()); });
    }
 
 int botan_x509_cert_get_time_expires(botan_x509_cert_t cert, char out[], size_t* out_len)
    {
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.end_time()); });
+   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.not_after().to_string()); });
    }
 
 int botan_x509_cert_get_serial_number(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)

@@ -53,7 +53,6 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Extension
       * @param subject the subject info
       * @param issuer the issuer info
       */
-      BOTAN_DEPRECATED("Use Extensions::get_extension_object")
       virtual void contents_to(Data_Store& subject,
                                Data_Store& issuer) const = 0;
 
@@ -340,7 +339,7 @@ class BOTAN_PUBLIC_API(2,0) Subject_Key_ID final : public Certificate_Extension
       Subject_Key_ID* copy() const override
          { return new Subject_Key_ID(m_key_id); }
 
-      std::vector<uint8_t> get_key_id() const { return m_key_id; }
+      const std::vector<uint8_t>& get_key_id() const { return m_key_id; }
 
       static OID static_oid() { return OID("2.5.29.14"); }
       OID oid_of() const override { return static_oid(); }
@@ -369,7 +368,7 @@ class BOTAN_PUBLIC_API(2,0) Authority_Key_ID final : public Certificate_Extensio
       Authority_Key_ID() = default;
       explicit Authority_Key_ID(const std::vector<uint8_t>& k) : m_key_id(k) {}
 
-      std::vector<uint8_t> get_key_id() const { return m_key_id; }
+      const std::vector<uint8_t>& get_key_id() const { return m_key_id; }
 
       static OID static_oid() { return OID("2.5.29.35"); }
       OID oid_of() const override { return static_oid(); }

@@ -64,13 +64,13 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * outer AlgorithmIdentifier
       * @return subject public key of this certificate
       */
-      std::vector<uint8_t> subject_public_key_bits() const;
+      const std::vector<uint8_t>& subject_public_key_bits() const;
 
       /**
       * Get the bit string of the public key associated with this certificate
       * @return public key bits
       */
-      std::vector<uint8_t> subject_public_key_bitstring() const;
+      const std::vector<uint8_t>& subject_public_key_bitstring() const;
 
       /**
       * Get the SHA-1 bit string of the public key associated with this certificate.
@@ -139,25 +139,31 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * Get the notBefore of the certificate as a string
       * @return notBefore of the certificate
       */
-      std::string start_time() const;
+      std::string BOTAN_DEPRECATED("Use not_before().to_string()") start_time() const
+         {
+         return not_before().to_string();
+         }
 
       /**
       * Get the notAfter of the certificate as a string
       * @return notAfter of the certificate
       */
-      std::string end_time() const;
+      std::string BOTAN_DEPRECATED("Use not_after().to_string()") end_time() const
+         {
+         return not_after().to_string();
+         }
 
       /**
       * Get the notBefore of the certificate as X509_Time
       * @return notBefore of the certificate
       */
-      X509_Time not_before() const;
+      const X509_Time& not_before() const;
 
       /**
       * Get the notAfter of the certificate as X509_Time
       * @return notAfter of the certificate
       */
-      X509_Time not_after() const;
+      const X509_Time& not_after() const;
 
       /**
       * Get the X509 version of this certificate object.
@@ -213,6 +219,14 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       bool allowed_extended_usage(const std::string& usage) const;
 
       /**
+      * Returns true if the specified usage is set in the extended key usage extension,
+      * or if no extended key usage constraints are set at all.
+      * To check if a certain extended key constraint is set in the certificate
+      * use @see X509_Certificate#has_ex_constraint.
+      */
+      bool allowed_extended_usage(const OID& usage) const;
+
+      /**
       * Returns true if the required key and extended key constraints are set in the certificate
       * for the specified @param usage or if no key constraints are set in both the key usage
       * and extended key usage extension.
@@ -227,7 +241,14 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * constraint, eg "PKIX.ServerAuth") is included in the extended
       * key extension.
       */
-      bool has_ex_constraint(const std::string& ex_constraint) const;
+      bool BOTAN_DEPRECATED("Use version taking an OID")
+         has_ex_constraint(const std::string& ex_constraint) const;
+
+      /**
+      * Returns true if and only if OID @param ex_constraint is
+      * included in the extended key extension.
+      */
+      bool has_ex_constraint(const OID& ex_constraint) const;
 
       /**
       * Get the path limit as defined in the BasicConstraints extension of
@@ -254,7 +275,15 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * extension of this certificate.
       * @return key constraints
       */
-      std::vector<std::string> ex_constraints() const;
+      std::vector<std::string>
+         BOTAN_DEPRECATED("Use extended_key_usage") ex_constraints() const;
+
+      /**
+      * Get the key usage as defined in the ExtendedKeyUsage extension
+      * of this certificate, or else an empty vector.
+      * @return key usage
+      */
+      const std::vector<OID>& extended_key_usage() const;
 
       /**
       * Get the name constraints as defined in the NameConstraints
@@ -269,6 +298,8 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * @return certificate policies
       */
       std::vector<std::string> policies() const;
+
+      std::vector<OID> certificate_policy_oids() const;
 
       /**
       * Get all extensions of this certificate.
@@ -363,8 +394,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
 
       // TODO: pimpl
       // struct X509_Certificate_Data;
-      //std::unique_ptr<X509_Certificate_Data> m_cert_data;
-
+      //std::shared_ptr<X509_Certificate_Data> m_cert_data;
 
       size_t m_version = 0;
       std::vector<uint8_t> m_serial;
@@ -378,14 +408,13 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       std::vector<uint8_t> m_subject_public_key_bits;
       AlgorithmIdentifier m_subject_public_key_algid;
       std::vector<uint8_t> m_subject_public_key_bitstring;
-      // computed as needed in subject_public_key_bitstring_sha1
-      mutable std::vector<uint8_t> m_subject_public_key_bitstring_sha1;
+      std::vector<uint8_t> m_subject_public_key_bitstring_sha1;
 
       std::vector<uint8_t> m_v2_issuer_key_id;
       std::vector<uint8_t> m_v2_subject_key_id;
 
       Key_Constraints m_key_constraints;
-      std::vector<OID> m_extended_key_constraints;
+      std::vector<OID> m_extended_key_usage;
       std::vector<uint8_t> m_authority_key_id;
       std::vector<uint8_t> m_subject_key_id;
 
@@ -394,7 +423,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
 
       size_t m_path_len_constraint = 0;
       bool m_self_signed = false;
-      bool m_ca_certificate = false;
+      bool m_is_ca_certificate = false;
 
       // TODO remove these:
       Extensions m_v3_extensions;
