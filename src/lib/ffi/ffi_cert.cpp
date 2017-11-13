@@ -55,7 +55,7 @@ int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key)
       *key = nullptr;
 
 #if defined(BOTAN_HAS_RSA)
-      std::unique_ptr<Botan::Public_Key> publicKey(safe_get(cert).subject_public_key());
+      std::unique_ptr<Botan::Public_Key> publicKey = safe_get(cert).load_subject_public_key();
       *key = new botan_pubkey_struct(publicKey.release());
       return BOTAN_FFI_SUCCESS;
 #else

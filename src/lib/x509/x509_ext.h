@@ -219,7 +219,7 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
       Extensions& operator=(const Extensions&) = default;
 
       Extensions(Extensions&&) = default;
-      Extensions& operator=(Extensions&) = default;
+      Extensions& operator=(Extensions&&) = default;
 
    private:
       static Certificate_Extension* create_extn_obj(const OID& oid,

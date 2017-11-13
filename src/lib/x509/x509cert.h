@@ -11,7 +11,7 @@
 #include <botan/x509_obj.h>
 #include <botan/x509_dn.h>
 #include <botan/x509_key.h>
-#include <botan/x509_ext.h>
+#include <botan/asn1_time.h>
 #include <botan/asn1_alt_name.h>
 #include <botan/datastor.h>
 #include <botan/key_constraint.h>
@@ -29,6 +29,8 @@ enum class Usage_Type
    OCSP_RESPONDER
    };
 
+class Extensions;
+
 struct X509_Certificate_Data;
 
 /**
@@ -44,7 +46,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       *
       * @return public key
       */
-      Public_Key* BOTAN_DEPRECATED("Use load_subject_public_key") subject_public_key() const
+      Public_Key* subject_public_key() const
          {
          return load_subject_public_key().release();
          }
